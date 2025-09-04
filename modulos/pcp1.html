@@ -1,0 +1,1246 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProduSIM - Módulo PCP1</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #0d6efd;
+            --secondary-color: #6c757d;
+            --success-color: #198754;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --info-color: #0dcaf0;
+        }
+        
+        .dashboard-card {
+            transition: transform 0.3s;
+            height: 100%;
+        }
+        
+        .dashboard-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        
+        .nav-tabs .nav-link.active {
+            font-weight: bold;
+            border-bottom: 3px solid var(--primary-color);
+        }
+        
+        .simulation-container {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .decision-panel {
+            background-color: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            margin-bottom: 15px;
+        }
+        
+        .result-panel {
+            background-color: white;
+            border-left: 4px solid var(--primary-color);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .validation-success {
+            color: var(--success-color);
+            font-weight: bold;
+        }
+        
+        .validation-warning {
+            color: var(--warning-color);
+            font-weight: bold;
+        }
+        
+        .validation-error {
+            color: var(--danger-color);
+            font-weight: bold;
+        }
+        
+        .period-nav {
+            background-color: #e9ecef;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .financial-summary {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 8px;
+            padding: 15px;
+        }
+    </style>
+</head>
+<body class="d-flex flex-column min-vh-100">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-speedometer2 me-2"></i>ProduSIM - PCP1
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#" id="nav-inicio"><i class="bi bi-house-door me-1"></i>Início</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" id="nav-demanda"><i class="bi bi-graph-up me-1"></i>Demanda</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" id="nav-producao"><i class="bi bi-gear me-1"></i>Produção</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" id="nav-compras"><i class="bi bi-cart me-1"></i>Compras</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" id="nav-capacidade"><i class="bi bi-building me-1"></i>Capacidade</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" id="nav-financeiro"><i class="bi bi-currency-dollar me-1"></i>Financeiro</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" id="nav-relatorios"><i class="bi bi-clipboard-data me-1"></i>Relatórios</a>
+                    </li>
+                </ul>
+                <div class="d-flex">
+                    <button class="btn btn-outline-light me-2" id="btn-close-period" type="button">
+                        <i class="bi bi-check2-circle me-1"></i>Fechar Período
+                    </button>
+                    <button class="btn btn-outline-light me-2" id="btn-save">
+                        <i class="bi bi-save me-1"></i>Salvar
+                    </button>
+                    <button class="btn btn-outline-light" id="btn-reset">
+                        <i class="bi bi-trash me-1"></i>Limpar Dados
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="flex-fill">
+    <div class="container mt-4">
+        <!-- Tela de Início/Cadastro -->
+    <div id="tela-inicio" class="content-section">
+            <div class="row">
+                <div class="col-md-8 mx-auto">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white">
+                            <h4 class="mb-0"><i class="bi bi-pencil-square me-2"></i>Cadastro do Grupo</h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label for="empresa" class="form-label">Nome da Empresa</label>
+                                <input type="text" class="form-control" id="empresa" placeholder="Digite o nome da empresa">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Integrantes do Grupo</label>
+                                <input type="text" class="form-control mb-2" id="integrante1" placeholder="Integrante 1">
+                                <input type="text" class="form-control mb-2" id="integrante2" placeholder="Integrante 2">
+                                <input type="text" class="form-control mb-2" id="integrante3" placeholder="Integrante 3">
+                                <input type="text" class="form-control mb-2" id="integrante4" placeholder="Integrante 4">
+                                <input type="text" class="form-control" id="integrante5" placeholder="Integrante 5">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Tipo de Demanda</label>
+                                <select class="form-select" id="tipo-demanda">
+                                    <option value="alta">Demanda Alta (Mercado de Massa)</option>
+                                    <option value="media">Demanda Média (Repetitivo em Lotes)</option>
+                                    <option value="baixa">Demanda Baixa (Sob Encomenda)</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Tamanho da Empresa</label>
+                                <select class="form-select" id="tamanho-empresa">
+                                    <option value="pequena">Pequena</option>
+                                    <option value="media">Média</option>
+                                    <option value="grande">Grande</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="modo-professor">
+                                    <label class="form-check-label" for="modo-professor">Modo Avançado (configurar cenário)</label>
+                                </div>
+                            </div>
+                            <div class="collapse" id="painel-cenario">
+                                <div class="card card-body mb-3">
+                                    <div class="row g-3">
+                                        <div class="col-md-3">
+                                            <label class="form-label">Volatilidade Demanda (%)</label>
+                                            <input type="number" class="form-control" id="cen-vol" value="20">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">Custo Estoque (un)</label>
+                                            <input type="number" class="form-control" id="cen-cust-estoque" value="2">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">Penalidade Venda Perdida (un)</label>
+                                            <input type="number" class="form-control" id="cen-penalidade" value="5">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">Custos Fixos (período)</label>
+                                            <input type="number" class="form-control" id="cen-custos-fixos" value="5000">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">Preço Colmeia</label>
+                                            <input type="number" class="form-control" id="preco-colmeia" value="20">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">Preço Piquet</label>
+                                            <input type="number" class="form-control" id="preco-piquet" value="28">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">Preço Maxim</label>
+                                            <input type="number" class="form-control" id="preco-maxim" value="35">
+                                        </div>
+                                    </div>
+                                    <small class="text-muted">Os demais parâmetros usam valores padrão e podem ser ajustados no código conforme necessário.</small>
+                                </div>
+                            </div>
+                            <div class="d-grid">
+                                <button class="btn btn-success" id="btn-iniciar-jogo" type="button">
+                                    <i class="bi bi-play-circle me-1"></i>Iniciar Jogo
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Demais telas serão carregadas dinamicamente -->
+    <div id="tela-demanda" class="content-section d-none"></div>
+
+        <div id="tela-producao" class="content-section d-none">
+            <!-- Conteúdo da tela de produção -->
+        </div>
+
+        <div id="tela-compras" class="content-section d-none">
+            <!-- Conteúdo da tela de compras -->
+        </div>
+
+        <div id="tela-capacidade" class="content-section d-none">
+            <!-- Conteúdo da tela de capacidade -->
+        </div>
+
+        <div id="tela-financeiro" class="content-section d-none">
+            <!-- Conteúdo da tela financeiro -->
+        </div>
+
+        <div id="tela-relatorios" class="content-section d-none">
+            <!-- Conteúdo da tela de relatórios -->
+        </div>
+    </div>
+    </main>
+
+        <footer class="bg-dark text-light mt-auto py-3">
+                <div class="container">
+                        <div class="row align-items-center">
+                                <div class="col-md-6">
+                                        <p class="mb-0">ProduSIM - Sistema de Simulação de PCP</p>
+                                        <p class="mb-0">Desenvolvido por Carlos Henrique (LABINFO/FAEN/UFGD) - 2025</p>
+                                </div>
+                                <div class="col-md-6 text-md-end">
+                                        <p class="mb-0">Versão 1.0.0 - Módulo PCP1</p>
+                                        <p class="mb-0">Baseado no LSSP_PCP da UFSC</p>
+                                        <button type="button" class="btn btn-outline-light btn-sm ms-2" data-bs-toggle="modal" data-bs-target="#modalRegras">
+                                                <i class="bi bi-info-circle"></i> Regras do Jogo
+                                        </button>
+                                </div>
+                        </div>
+                </div>
+        </footer>
+
+        <!-- Modal Regras do Jogo -->
+        <div class="modal fade" id="modalRegras" tabindex="-1" aria-labelledby="modalRegrasLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title" id="modalRegrasLabel"><i class="bi bi-info-circle me-2"></i>Regras do Jogo</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <h6>Objetivo</h6>
+                        <p>O objetivo do jogo é maximizar o <strong>Resultado Acumulado</strong> (lucro total) ao final do período 24, mantendo um <strong>Nível de Serviço</strong> elevado (mínimo recomendado: 90%).</p>
+                        <h6>Como Jogar</h6>
+                        <ul>
+                            <li><strong>Previsão de Demanda:</strong> Use a Demanda Base como referência e ajuste conforme o histórico. Reduza erros de previsão.</li>
+                            <li><strong>Produção:</strong> Planeje dentro da capacidade disponível. Produzir acima da capacidade gera terceirização (custo extra).</li>
+                            <li><strong>Compras:</strong> Compre insumos conforme o plano de produção e o BOM. Evite estoques excessivos.</li>
+                            <li><strong>Serviço:</strong> Busque atender a demanda sem gerar perdas de venda, mas sem inflar estoques.</li>
+                            <li><strong>Fechamento:</strong> Ao fechar o período, confira o Financeiro. Investigue quedas no resultado operacional.</li>
+                        </ul>
+                        <h6>Critério de Vitória</h6>
+                        <ul>
+                            <li>Vence o grupo com maior <strong>Resultado Acumulado</strong> no período 24.</li>
+                            <li>Em caso de empate, vence quem tiver maior <strong>Nível de Serviço</strong> acumulado.</li>
+                        </ul>
+                        <h6>Dicas</h6>
+                        <ul>
+                            <li>Evite terceirização e perdas de venda para maximizar o lucro.</li>
+                            <li>Estoques altos geram custos extras; estoques baixos podem causar perdas de venda.</li>
+                            <li>Use os relatórios e gráficos para ajustar sua estratégia a cada período.</li>
+                        </ul>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Variáveis globais
+        let currentPeriod = 13;
+        let gameData = {
+            config: {},
+            demanda: {},
+            producao: {},
+            compras: {},
+            capacidade: {},
+            financeiro: {},
+            resultados: {}
+        };
+
+        // Constantes do jogo (padrões)
+        const PRODUCTS = ['colmeia', 'piquet', 'maxim'];
+        const MATERIALS = ['fio1', 'fio2', 'corantes'];
+        const BOM = {
+            colmeia: { fio1: 1.0, fio2: 0.0, corantes: 0.10 },
+            piquet:  { fio1: 0.0, fio2: 1.0, corantes: 0.12 },
+            maxim:   { fio1: 0.5, fio2: 0.5, corantes: 0.15 }
+        };
+        const MATERIAL_COST = { fio1: 2, fio2: 3, corantes: 1 };
+        const PROCESS_RATES = { // unidades por máquina por turno no período
+            tecelagem: 500,
+            purgaTinturaria: 800,
+            fixacaoAcabamento: 600
+        };
+        const PROCESS_WEIGHTS = { // carga relativa por produto
+            colmeia: { tecelagem: 1.0, purgaTinturaria: 0.8, fixacaoAcabamento: 0.6 },
+            piquet:  { tecelagem: 1.0, purgaTinturaria: 1.0, fixacaoAcabamento: 0.7 },
+            maxim:   { tecelagem: 1.0, purgaTinturaria: 1.2, fixacaoAcabamento: 0.9 }
+        };
+        const DEFAULT_PRICES = { colmeia: 20, piquet: 28, maxim: 35 };
+    const DEFAULT_COSTS = { custoEstoque: 2, penalidadePerda: 5, custosFixos: 5000, custoTerceirizacao: 3 };
+
+    // Estado de visualização (seletores de período)
+    let financeViewPeriod = null; // período selecionado na aba Financeiro
+    let reportViewPeriod = null;  // período selecionado na aba Relatórios
+
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', function() {
+            loadGameData();
+            setupEventListeners();
+            initializeGame();
+        });
+
+        // Configuração dos event listeners
+        function setupEventListeners() {
+            // Navegação (prevenir comportamento padrão do link)
+            document.getElementById('nav-inicio').addEventListener('click', (e) => { e.preventDefault(); showSection('inicio'); });
+            document.getElementById('nav-demanda').addEventListener('click', (e) => { e.preventDefault(); showSection('demanda'); });
+            document.getElementById('nav-producao').addEventListener('click', (e) => { e.preventDefault(); showSection('producao'); });
+            document.getElementById('nav-compras').addEventListener('click', (e) => { e.preventDefault(); showSection('compras'); });
+            document.getElementById('nav-capacidade').addEventListener('click', (e) => { e.preventDefault(); showSection('capacidade'); });
+            document.getElementById('nav-financeiro').addEventListener('click', (e) => { e.preventDefault(); showSection('financeiro'); });
+            document.getElementById('nav-relatorios').addEventListener('click', (e) => { e.preventDefault(); showSection('relatorios'); });
+            
+            // Ações
+            document.getElementById('btn-iniciar-jogo').addEventListener('click', iniciarJogo);
+            document.getElementById('btn-save').addEventListener('click', saveGameData);
+            document.getElementById('btn-reset').addEventListener('click', resetGameData);
+            const profSwitch = document.getElementById('modo-professor');
+            if (profSwitch) {
+                profSwitch.addEventListener('change', (e) => {
+                    const pnl = document.getElementById('painel-cenario');
+                    if (!pnl) return;
+                    const bsCollapse = new bootstrap.Collapse(pnl, { toggle: false });
+                    e.target.checked ? bsCollapse.show() : bsCollapse.hide();
+                });
+            }
+            const btnClose = document.getElementById('btn-close-period');
+            if (btnClose) btnClose.addEventListener('click', closePeriod);
+            updateGlobalActionsUI();
+        }
+
+        // Inicializar o jogo
+        function initializeGame() {
+            if (gameData.config.empresa) {
+                // Já existe um jogo em andamento
+                showSection('demanda');
+                updateAllDisplays();
+            } else {
+                // Novo jogo - mostrar tela de cadastro
+                showSection('inicio');
+            }
+            updateGlobalActionsUI();
+        }
+
+        // Mostrar seção específica
+        function showSection(section) {
+            // Esconder todas as seções
+            document.querySelectorAll('.content-section').forEach(el => {
+                el.classList.add('d-none');
+            });
+            
+            // Mostrar a seção solicitada
+            document.getElementById(`tela-${section}`).classList.remove('d-none');
+            
+            // Atualizar navegação
+            document.querySelectorAll('.nav-link').forEach(el => {
+                el.classList.remove('active');
+            });
+            document.getElementById(`nav-${section}`).classList.add('active');
+            
+            // Se for a seção de relatórios, gerar os relatórios
+            if (section === 'relatorios') {
+                generateReports();
+            }
+            // Render dinâmico da seção ativa
+            if (section === 'demanda') updateDemandaDisplay();
+            if (section === 'producao') updateProducaoDisplay();
+            if (section === 'compras') updateComprasDisplay();
+            if (section === 'capacidade') updateCapacidadeDisplay();
+            if (section === 'financeiro') updateFinanceiroDisplay();
+        }
+
+        // Iniciar novo jogo
+        function iniciarJogo() {
+            const empresa = document.getElementById('empresa').value;
+            const integrantes = [
+                document.getElementById('integrante1').value,
+                document.getElementById('integrante2').value,
+                document.getElementById('integrante3').value,
+                document.getElementById('integrante4').value,
+                document.getElementById('integrante5').value
+            ].filter(name => name.trim() !== '');
+            
+            const tipoDemanda = document.getElementById('tipo-demanda').value;
+            const tamanhoEmpresa = document.getElementById('tamanho-empresa').value;
+            
+            if (!empresa || integrantes.length === 0) {
+                alert('Por favor, preencha o nome da empresa e pelo menos um integrante!');
+                return;
+            }
+            
+            try {
+                // Configurar dados iniciais do jogo
+                const cenario = collectScenarioConfig(tipoDemanda);
+                gameData.config = {
+                    empresa,
+                    integrantes,
+                    tipoDemanda,
+                    tamanhoEmpresa,
+                    periodoAtual: 13,
+                    dataInicio: new Date().toISOString(),
+                    cenario
+                };
+
+                // Inicializar estruturas de dados vazias
+                initializeGameData();
+
+                // Salvar e mostrar a tela de demanda
+                saveGameData();
+                showSection('demanda');
+                updateAllDisplays();
+                showToast('Jogo iniciado! Navegando para Demanda.', 'success');
+                console.log('Jogo iniciado:', gameData.config);
+            } catch (err) {
+                console.error('Erro ao iniciar o jogo:', err);
+                showToast(`Erro ao iniciar o jogo: ${err.message}`, 'danger');
+            }
+        }
+
+        // Inicializar estruturas de dados do jogo
+        function initializeGameData() {
+            // Inicializar dados de demanda
+            const numCores = gameData.config.tipoDemanda === 'alta' ? 1 : 
+                            gameData.config.tipoDemanda === 'media' ? 3 : 10;
+            
+            // Dados iniciais baseados no tamanho da empresa
+            const estoqueInicial = {
+                pequena: { malhas: 100, fios: 100, corantes: 10 },
+                media: { malhas: 1000, fios: 1000, corantes: 100 },
+                grande: { malhas: 10000, fios: 10000, corantes: 1000 }
+            };
+            
+            const recursosIniciais = {
+                pequena: { teares: 2, jets: 5, ramas: 0, turnosTeares: 1, turnosJets: 1, turnosRamas: 0 },
+                media: { teares: 5, jets: 3, ramas: 1, turnosTeares: 2, turnosJets: 2, turnosRamas: 1 },
+                grande: { teares: 23, jets: 3, ramas: 2, turnosTeares: 3, turnosJets: 3, turnosRamas: 2 }
+            };
+            
+            // Corrige nome da variável (estoqueInicial) para evitar ReferenceError
+            const estoque = estoqueInicial[gameData.config.tamanhoEmpresa];
+            const recursos = recursosIniciais[gameData.config.tamanhoEmpresa];
+            
+            // Inicializar períodos (13 a 24)
+            for (let i = 13; i <= 24; i++) {
+                // Demanda
+                gameData.demanda[i] = {
+                    colmeia: { prevista: 0, real: 0 },
+                    piquet: { prevista: 0, real: 0 },
+                    maxim: { prevista: 0, real: 0 }
+                };
+                
+                // Produção
+                gameData.producao[i] = {
+                    colmeia: { planejada: 0, real: 0, estoqueInicial: i === 13 ? estoque.malhas : 0, vendas: 0, vendasPerdidas: 0, estoqueFinal: 0 },
+                    piquet: { planejada: 0, real: 0, estoqueInicial: i === 13 ? estoque.malhas : 0, vendas: 0, vendasPerdidas: 0, estoqueFinal: 0 },
+                    maxim: { planejada: 0, real: 0, estoqueInicial: i === 13 ? estoque.malhas : 0, vendas: 0, vendasPerdidas: 0, estoqueFinal: 0 }
+                };
+                
+                // Compras
+                gameData.compras[i] = {
+                    fio1: { planejada: 0, real: 0, consumoPrevisto: 0, consumoReal: 0, estoqueInicial: i === 13 ? estoque.fios : 0, estoqueFinal: 0, comprasEmergencia: 0 },
+                    fio2: { planejada: 0, real: 0, consumoPrevisto: 0, consumoReal: 0, estoqueInicial: i === 13 ? estoque.fios : 0, estoqueFinal: 0, comprasEmergencia: 0 },
+                    corantes: { planejada: 0, real: 0, consumoPrevisto: 0, consumoReal: 0, estoqueInicial: i === 13 ? estoque.corantes : 0, estoqueFinal: 0, comprasEmergencia: 0 }
+                };
+                
+                // Capacidade
+                gameData.capacidade[i] = {
+                    tecelagem: {
+                        necessaria: 0,
+                        disponivel: 0,
+                        instalada: 0,
+                        terceirizada: 0,
+                        turnos: recursos.turnosTeares,
+                        teares: recursos.teares,
+                        validacao: 'NÃO'
+                    },
+                    purgaTinturaria: {
+                        necessaria: 0,
+                        disponivel: 0,
+                        instalada: 0,
+                        terceirizada: 0,
+                        turnos: recursos.turnosJets,
+                        jets: recursos.jets,
+                        validacao: 'NÃO'
+                    },
+                    fixacaoAcabamento: {
+                        necessaria: 0,
+                        disponivel: 0,
+                        instalada: 0,
+                        terceirizada: 0,
+                        turnos: recursos.turnosRamas,
+                        ramas: recursos.ramas,
+                        validacao: 'NÃO'
+                    }
+                };
+                
+                // Financeiro
+                gameData.financeiro[i] = {
+                    custosFixos: 0,
+                    custosCompras: 0,
+                    custosEstoques: 0,
+                    custosTerceirizacao: 0,
+                    custosCapital: 0,
+                    custosVendasPerdidas: 0,
+                    receitaVendas: 0,
+                    resultadoOperacional: 0,
+                    resultadoAcumulado: 0
+                };
+            }
+            
+            // Resultados iniciais
+            gameData.resultados = {
+                previsaoErro: { colmeia: 0, piquet: 0, maxim: 0 },
+                utilizacaoCapacidade: { tecelagem: 0, purgaTinturaria: 0, fixacaoAcabamento: 0 },
+                indicadores: { nivelServico: 0, giroEstoques: 0, lucratividade: 0 }
+            };
+        }
+
+        // Atualizar todas as visualizações
+        function updateAllDisplays() {
+            updateDemandaDisplay();
+            updateProducaoDisplay();
+            updateComprasDisplay();
+            updateCapacidadeDisplay();
+            updateFinanceiroDisplay();
+            updateGlobalActionsUI();
+        }
+
+        // Atualiza botões globais conforme status
+        function updateGlobalActionsUI() {
+            const btn = document.getElementById('btn-close-period');
+            if (!btn) return;
+            const ultimo = Number(gameData.config?.ultimoFechado || 0);
+            const concluida = !!gameData.config?.simulacaoConcluida || ultimo >= 24;
+            btn.disabled = concluida;
+            btn.title = concluida ? 'Simulação concluída' : 'Fechar Período';
+        }
+
+        // Salvar dados do jogo
+        function saveGameData() {
+            try {
+                localStorage.setItem('produSIM_pcp1', JSON.stringify(gameData));
+                showToast('Jogo salvo com sucesso!', 'success');
+            } catch (e) {
+                console.warn('Falha ao salvar no localStorage:', e);
+                alert('Aviso: não foi possível salvar os dados localmente.');
+            }
+        }
+
+        // Carregar dados do jogo
+        function loadGameData() {
+            const savedData = localStorage.getItem('produSIM_pcp1');
+            if (savedData) {
+                try {
+                    gameData = JSON.parse(savedData);
+                } catch (e) {
+                    console.warn('Dados corrompidos no localStorage. Limpando...', e);
+                    localStorage.removeItem('produSIM_pcp1');
+                    gameData = {
+                        config: {},
+                        demanda: {},
+                        producao: {},
+                        compras: {},
+                        capacidade: {},
+                        financeiro: {},
+                        resultados: {}
+                    };
+                }
+            }
+        }
+
+        // Resetar dados do jogo
+        function resetGameData() {
+            if (confirm('Tem certeza que deseja limpar todos os dados? Esta ação não pode ser desfeita.')) {
+                localStorage.removeItem('produSIM_pcp1');
+                gameData = {
+                    config: {},
+                    demanda: {},
+                    producao: {},
+                    compras: {},
+                    capacidade: {},
+                    financeiro: {},
+                    resultados: {}
+                };
+                showSection('inicio');
+                showToast('Dados resetados com sucesso!', 'info');
+            }
+        }
+
+        // Mostrar notificação
+        function showToast(message, type = 'info') {
+            try {
+                if (window.bootstrap && typeof window.bootstrap.Toast === 'function') {
+                    const toastContainer = document.getElementById('toast-container') || createToastContainer();
+                    const toast = document.createElement('div');
+                    toast.className = `toast align-items-center text-bg-${type} border-0`;
+                    toast.setAttribute('role', 'alert');
+                    toast.setAttribute('aria-live', 'assertive');
+                    toast.setAttribute('aria-atomic', 'true');
+                    toast.innerHTML = `
+                        <div class="d-flex">
+                            <div class="toast-body">${message}</div>
+                            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                        </div>
+                    `;
+                    toastContainer.appendChild(toast);
+                    const bsToast = new bootstrap.Toast(toast);
+                    bsToast.show();
+                    toast.addEventListener('hidden.bs.toast', () => toast.remove());
+                } else {
+                    alert(message);
+                }
+            } catch (e) {
+                console.warn('Falha ao exibir toast, usando alert:', e);
+                alert(message);
+            }
+        }
+
+        // Criar container para toasts
+        function createToastContainer() {
+            const container = document.createElement('div');
+            container.id = 'toast-container';
+            container.className = 'toast-container position-fixed top-0 end-0 p-3';
+            container.style.zIndex = '1100';
+            document.body.appendChild(container);
+            return container;
+        }
+
+        // Relatório final em PDF (consolidado)
+        function generateFinalPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const margin = 15; let y = margin;
+            const pEnd = 24;
+            const totals = computeFinalTotals(pEnd);
+
+            doc.setFontSize(18);
+            doc.text('Relatório Final – ProduSIM PCP1', 105, y, { align: 'center' }); y += 8;
+            doc.setFontSize(11);
+            doc.text(`Empresa: ${gameData.config.empresa}`, margin, y); y += 6;
+            doc.text(`Integrantes: ${gameData.config.integrantes?.join(', ')||''}`, margin, y); y += 6;
+            doc.text(`Tipo de Demanda: ${gameData.config.tipoDemanda} | Tamanho: ${gameData.config.tamanhoEmpresa}`, margin, y); y += 8;
+
+            doc.setFontSize(12);
+            doc.text('Resumo da Simulação (Períodos 13–24)', margin, y); y += 6;
+            doc.setFontSize(11);
+            doc.text(`Receita total: R$ ${totals.receita.toFixed(2)}`, margin, y); y += 6;
+            doc.text(`Custos totais: R$ ${totals.custos.toFixed(2)}`, margin, y); y += 6;
+            doc.text(`Resultado acumulado: R$ ${totals.resultadoAcumulado.toFixed(2)}`, margin, y); y += 8;
+
+            const addHeader = () => { doc.setFontSize(11); doc.text('Período  Receita   Custos   Resultado   Acumulado', margin, y); y += 5; };
+            addHeader();
+            for (let p=13; p<=pEnd; p++) {
+                const f = gameData.financeiro[p] || {};
+                const custos = (Number(f.custosCompras||0)+Number(f.custosFixos||0)+Number(f.custosEstoques||0)+Number(f.custosVendasPerdidas||0)+Number(f.custosTerceirizacao||0));
+                const linha = `${p.toString().padEnd(7)} R$ ${Number(f.receitaVendas||0).toFixed(2).padStart(8)}  R$ ${custos.toFixed(2).padStart(8)}  R$ ${Number(f.resultadoOperacional||0).toFixed(2).padStart(9)}  R$ ${Number(f.resultadoAcumulado||0).toFixed(2).padStart(9)}`;
+                if (y > 280) { doc.addPage(); y = margin; addHeader(); }
+                doc.text(linha, margin, y); y += 5;
+            }
+
+            if (y > 260) { doc.addPage(); y = margin; }
+            doc.setFontSize(12); doc.text('Indicadores', margin, y); y += 6; doc.setFontSize(11);
+            const ns = (computeServiceLevelTill(pEnd)*100).toFixed(1);
+            doc.text(`Nível de serviço: ${ns}%`, margin, y); y += 6;
+            doc.text(`Data de início: ${gameData.config.dataInicio?.split('T')[0]||''}`, margin, y); y += 6;
+            doc.text('Desenvolvido por: LABINFO/FAEN/UFGD - 2025', margin, y); y += 6;
+
+            doc.save(`Relatorio_Final_ProduSIM_${(gameData.config.empresa||'Empresa').replace(/\s+/g,'_')}.pdf`);
+            showToast('Relatório final exportado!', 'success');
+        }
+
+        // Helpers de cenário
+    function collectScenarioConfig(tipoDemandaSel) {
+            const vol = parseFloat(document.getElementById('cen-vol')?.value || 20);
+            const custoEstoque = parseFloat(document.getElementById('cen-cust-estoque')?.value || DEFAULT_COSTS.custoEstoque);
+            const penal = parseFloat(document.getElementById('cen-penalidade')?.value || DEFAULT_COSTS.penalidadePerda);
+            const fixos = parseFloat(document.getElementById('cen-custos-fixos')?.value || DEFAULT_COSTS.custosFixos);
+            const precos = {
+                colmeia: parseFloat(document.getElementById('preco-colmeia')?.value || DEFAULT_PRICES.colmeia),
+                piquet: parseFloat(document.getElementById('preco-piquet')?.value || DEFAULT_PRICES.piquet),
+                maxim: parseFloat(document.getElementById('preco-maxim')?.value || DEFAULT_PRICES.maxim)
+            };
+            // Gera baseline de demanda simples por período conforme tipoDemanda
+            const base = {};
+            for (let p = 13; p <= 24; p++) {
+        if (tipoDemandaSel === 'alta') {
+                    base[p] = { colmeia: 1200, piquet: 900, maxim: 700 };
+        } else if (tipoDemandaSel === 'media') {
+                    base[p] = { colmeia: 600, piquet: 450, maxim: 350 };
+                } else {
+                    base[p] = { colmeia: 200, piquet: 150, maxim: 100 };
+                }
+            }
+            return {
+                volatilidade: vol / 100,
+                custoEstoque,
+                penalidadePerda: penal,
+                custosFixos: fixos,
+                precos,
+                custoTerceirizacao: DEFAULT_COSTS.custoTerceirizacao,
+                demandaBase: base
+            };
+        }
+
+        function getPeriodoAtual() { return gameData.config?.periodoAtual || 13; }
+
+        // Render: Demanda
+        let demandaChart;
+        function updateDemandaDisplay() {
+            const p = getPeriodoAtual();
+            const el = document.getElementById('tela-demanda');
+            if (!el) return;
+            const d = gameData.demanda[p];
+            const cenario = gameData.config.cenario;
+            el.innerHTML = `
+                <div class="simulation-container">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0"><i class="bi bi-graph-up text-primary me-2"></i>Demanda – Período ${p}</h5>
+                        <div>
+                            <button class="btn btn-sm btn-outline-secondary me-2" id="btn-prev-period"><i class="bi bi-arrow-left"></i></button>
+                            <button class="btn btn-sm btn-outline-secondary" id="btn-next-period"><i class="bi bi-arrow-right"></i></button>
+                        </div>
+                    </div>
+                    <div class="row g-3">
+                        ${PRODUCTS.map(prod => `
+                        <div class="col-md-4">
+                            <div class="decision-panel">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <strong class="text-capitalize">${prod}</strong>
+                                    <span class="badge bg-light text-dark">Base: ${cenario.demandaBase[p][prod]}</span>
+                                </div>
+                                <label class="form-label">Previsão de Demanda</label>
+                                <input type="number" class="form-control" id="prev-${prod}" value="${d[prod].prevista}" min="0">
+                                <div class="small text-muted mt-2">Real última: ${gameData.demanda[p-1]?.[prod]?.real || 0}</div>
+                            </div>
+                        </div>`).join('')}
+                    </div>
+                    <div class="mt-3">
+                        <canvas id="chart-demanda" height="100"></canvas>
+                    </div>
+                </div>`;
+
+            // Bind prev/next
+            document.getElementById('btn-prev-period').onclick = () => { changePeriod(-1); };
+            document.getElementById('btn-next-period').onclick = () => { changePeriod(1); };
+            // Save on input change
+            PRODUCTS.forEach(prod => {
+                const inp = document.getElementById(`prev-${prod}`);
+                if (inp) inp.addEventListener('change', (e) => {
+                    gameData.demanda[p][prod].prevista = Number(e.target.value) || 0;
+                    saveGameData();
+                    renderDemandaChart();
+                });
+            });
+            renderDemandaChart();
+        }
+
+        function renderDemandaChart() {
+            const ctx = document.getElementById('chart-demanda');
+            if (!ctx) return;
+            const p = getPeriodoAtual();
+            const labels = [];
+            for (let i = 13; i <= p; i++) labels.push(String(i));
+            const datasets = PRODUCTS.map((prod, idx) => ({
+                label: `Real ${prod}`,
+                data: labels.map((_, k) => gameData.demanda[13+k]?.[prod]?.real || 0),
+                borderColor: ['#0d6efd','#198754','#dc3545'][idx],
+                backgroundColor: 'transparent',
+                tension: 0.2
+            })).concat(PRODUCTS.map((prod, idx) => ({
+                label: `Prevista ${prod}`,
+                data: labels.map((_, k) => gameData.demanda[13+k]?.[prod]?.prevista || 0),
+                borderColor: ['#0d6efd66','#19875466','#dc354566'][idx],
+                borderDash: [5,5],
+                backgroundColor: 'transparent',
+                tension: 0.2
+            })));
+            if (demandaChart) demandaChart.destroy();
+            demandaChart = new Chart(ctx, { type: 'line', data: { labels, datasets }, options: { responsive: true, plugins: { legend: { position: 'bottom' } } } });
+        }
+
+        // Render: Produção
+        function updateProducaoDisplay() {
+            const p = getPeriodoAtual();
+            const el = document.getElementById('tela-producao');
+            if (!el) return;
+            const prod = gameData.producao[p];
+            el.innerHTML = `
+                <div class="simulation-container">
+                    <h5 class="mb-3"><i class="bi bi-gear text-primary me-2"></i>Produção – Período ${p}</h5>
+                    <div class="row g-3">
+                        ${PRODUCTS.map(k=>`
+                        <div class="col-md-4">
+                            <div class="decision-panel">
+                                <div class="d-flex justify-content-between">
+                                    <strong class="text-capitalize">${k}</strong>
+                                    <span class="small text-muted">Est. Inicial: ${prod[k].estoqueInicial}</span>
+                                </div>
+                                <label class="form-label mt-2">Produção Planejada</label>
+                                <input type="number" class="form-control" id="plan-${k}" value="${prod[k].planejada}" min="0">
+                                <div class="small text-muted mt-2">Est. Final (estimado): ${(prod[k].estoqueInicial + prod[k].planejada) - (gameData.demanda[p][k].prevista || 0)}</div>
+                            </div>
+                        </div>`).join('')}
+                    </div>
+                </div>`;
+            PRODUCTS.forEach(k=>{
+                const elIn = document.getElementById(`plan-${k}`);
+                if (elIn) elIn.addEventListener('change', (e)=>{
+                    gameData.producao[p][k].planejada = Number(e.target.value)||0;
+                    saveGameData();
+                });
+            });
+        }
+
+        // Render: Compras
+        function updateComprasDisplay() {
+            const p = getPeriodoAtual();
+            const el = document.getElementById('tela-compras');
+            if (!el) return;
+            const comp = gameData.compras[p];
+            el.innerHTML = `
+                <div class="simulation-container">
+                    <h5 class="mb-3"><i class="bi bi-cart text-primary me-2"></i>Compras – Período ${p}</h5>
+                    <div class="row g-3">
+                        ${MATERIALS.map(m=>`
+                        <div class="col-md-4">
+                            <div class="decision-panel">
+                                <div class="d-flex justify-content-between">
+                                    <strong class="text-uppercase">${m}</strong>
+                                    <span class="small text-muted">Est. Inicial: ${comp[m].estoqueInicial}</span>
+                                </div>
+                                <label class="form-label mt-2">Compra Planejada</label>
+                                <input type="number" class="form-control" id="buy-${m}" value="${comp[m].planejada}" min="0">
+                            </div>
+                        </div>`).join('')}
+                    </div>
+                </div>`;
+            MATERIALS.forEach(m=>{
+                const elIn = document.getElementById(`buy-${m}`);
+                if (elIn) elIn.addEventListener('change',(e)=>{
+                    gameData.compras[p][m].planejada = Number(e.target.value)||0;
+                    saveGameData();
+                });
+            });
+        }
+
+        // Render: Capacidade
+        function updateCapacidadeDisplay() {
+            const p = getPeriodoAtual();
+            const el = document.getElementById('tela-capacidade');
+            if (!el) return;
+            const cap = computeCapacity(p);
+            el.innerHTML = `
+                <div class="simulation-container">
+                    <h5 class="mb-3"><i class="bi bi-building text-primary me-2"></i>Capacidade – Período ${p}</h5>
+                    <div class="row g-3">
+                        ${['tecelagem','purgaTinturaria','fixacaoAcabamento'].map(proc=>{
+                            const util = cap[proc].necessaria>0? Math.min(100, Math.round((cap[proc].necessaria/cap[proc].disponivel)*100)) : 0;
+                            return `
+                            <div class="col-md-4">
+                                <div class="result-panel">
+                                    <div class="d-flex justify-content-between mb-1"><strong>${proc}</strong><span class="small">Utilização: ${util}%</span></div>
+                                    <div class="progress mb-2"><div class="progress-bar ${util>100? 'bg-danger':''}" role="progressbar" style="width:${Math.min(util,100)}%"></div></div>
+                                    <div class="small">Necessária: ${cap[proc].necessaria.toFixed(0)} | Disponível: ${cap[proc].disponivel.toFixed(0)}</div>
+                                </div>
+                            </div>`;
+                        }).join('')}
+                    </div>
+                </div>`;
+        }
+
+        // Render: Financeiro
+        function updateFinanceiroDisplay() {
+            const pAtual = getPeriodoAtual();
+            const pEnd = gameData.config.ultimoFechado || pAtual;
+            const p = financeViewPeriod || pEnd;
+            const el = document.getElementById('tela-financeiro');
+            if (!el) return;
+            // Recalcula on-demand se houver vendas e fin estiver zerado
+            const vendasTot = PRODUCTS.reduce((s,k)=> s + (gameData.producao[p]?.[k]?.vendas || 0), 0);
+            if (vendasTot > 0) {
+                const finTest = gameData.financeiro[p] || {};
+                const sum = (val)=> Number(val||0);
+                const totalAbs = sum(finTest.receitaVendas)+sum(finTest.custosCompras)+sum(finTest.custosFixos)+sum(finTest.custosEstoques)+sum(finTest.custosVendasPerdidas)+sum(finTest.custosTerceirizacao);
+                if (totalAbs === 0) computeFinance(p);
+            }
+            const fin = gameData.financeiro[p] || {};
+            el.innerHTML = `
+                <div class="simulation-container">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-3"><i class="bi bi-currency-dollar text-primary me-2"></i>Financeiro – Período ${p}</h5>
+                        <div class="d-flex align-items-center gap-2">
+                            <label class="me-1 small text-muted">Ver período:</label>
+                            <select id="sel-fin-periodo" class="form-select form-select-sm" style="width:auto">
+                                ${Array.from({length: (pEnd-12)}, (_,i)=> 13+i).map(pi=>`<option value="${pi}" ${pi===p? 'selected':''}>${pi}</option>`).join('')}
+                            </select>
+                            ${p !== pAtual ? `<span class="badge rounded-pill text-bg-light">Atual: ${pAtual}</span>` : ''}
+                        </div>
+                    </div>
+                    <div class="row g-3">
+                        ${[
+                            ['Receita de Vendas', fin.receitaVendas],
+                            ['Custos de Compras', -fin.custosCompras],
+                            ['Custos Fixos', -fin.custosFixos],
+                            ['Custos de Estoque', -fin.custosEstoques],
+                            ['Vendas Perdidas', -fin.custosVendasPerdidas],
+                            ['Terceirização', -fin.custosTerceirizacao],
+                            ['Resultado Operacional', fin.resultadoOperacional]
+                        ].map(([label,val])=>`
+                        <div class="col-md-4">
+                            <div class="result-panel">
+                                <div class="text-muted small">${label}</div>
+                                <div class="fs-5">R$ ${Number(val||0).toFixed(2)}</div>
+                            </div>
+                        </div>`).join('')}
+                    </div>
+                    <div class="financial-summary mt-2">
+                        <div class="d-flex justify-content-between"><span>Resultado Acumulado</span><strong>R$ ${Number(fin.resultadoAcumulado||0).toFixed(2)}</strong></div>
+                    </div>
+                </div>`;
+            const sel = document.getElementById('sel-fin-periodo');
+            if (sel) sel.addEventListener('change', (e)=>{ financeViewPeriod = Number(e.target.value)||pEnd; updateFinanceiroDisplay(); });
+        }
+
+        // Relatórios
+        function generateReports() {
+            const el = document.getElementById('tela-relatorios');
+            if (!el) return;
+            const pEnd = Number(gameData.config.ultimoFechado || 13);
+            const concluida = (!!gameData.config.simulacaoConcluida) || pEnd >= 24;
+            const totals = computeFinalTotals(concluida ? 24 : pEnd);
+            const pSel = reportViewPeriod || pEnd;
+            const finSel = gameData.financeiro[pSel] || {};
+            el.innerHTML = `
+                <div class="simulation-container">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0"><i class="bi bi-clipboard-data text-primary me-2"></i>${concluida? 'Relatório Final' : 'Relatório Parcial'}</h5>
+                        <button class="btn btn-outline-primary btn-sm" id="btn-export-pdf" ${concluida? '' : 'disabled'}><i class="bi bi-filetype-pdf me-1"></i>Exportar PDF</button>
+                    </div>
+                    ${!concluida ? '<div class="alert alert-warning">O relatório final estará disponível ao término do período 24. Abaixo um resumo parcial.</div>' : ''}
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="result-panel">
+                                <div class="fw-bold mb-2">Resumo Financeiro (${concluida ? 'Total Simulação' : 'Até Período '+pEnd})</div>
+                                <ul class="mb-0">
+                                    <li>Receita total: R$ ${totals.receita.toFixed(2)}</li>
+                                    <li>Custos totais: R$ ${totals.custos.toFixed(2)}</li>
+                                    <li>Resultado acumulado: R$ ${totals.resultadoAcumulado.toFixed(2)}</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="result-panel">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="fw-bold mb-2">Detalhe por Período</div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <label class="me-1 small text-muted">Ver período:</label>
+                                        <select id="sel-relatorio-periodo" class="form-select form-select-sm" style="width:auto">
+                                            ${Array.from({length: (pEnd-12)}, (_,i)=> 13+i).map(pi=>`<option value="${pi}" ${pi===pSel? 'selected':''}>${pi}</option>`).join('')}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div id="relatorio-periodo-detalhe">
+                                    ${renderReportPeriodDetailHTML(pSel, finSel)}
+                                </div>
+                                <div class="mt-3 border-top pt-2">
+                                    <div class="fw-bold mb-2">Indicadores</div>
+                                    <ul class="mb-0">
+                                        <li>Nível de Serviço: ${(computeServiceLevelTill(concluida?24:pEnd)*100).toFixed(1)}%</li>
+                                        <li>Períodos fechados: ${Math.max(0, pEnd-12)} de 12</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+            const btn = document.getElementById('btn-export-pdf');
+            if (btn) btn.addEventListener('click', () => {
+                if (!concluida) { showToast('Disponível apenas ao final da simulação.', 'info'); return; }
+                generateFinalPDF();
+            });
+            const sel = document.getElementById('sel-relatorio-periodo');
+            if (sel) sel.addEventListener('change', (e)=>{
+                reportViewPeriod = Number(e.target.value)||pEnd;
+                const fin = gameData.financeiro[reportViewPeriod] || {};
+                const cont = document.getElementById('relatorio-periodo-detalhe');
+                if (cont) cont.innerHTML = renderReportPeriodDetailHTML(reportViewPeriod, fin);
+            });
+        }
+
+        function renderReportPeriodDetailHTML(p, fin) {
+            const custos = Number((fin.custosCompras||0)+(fin.custosFixos||0)+(fin.custosEstoques||0)+(fin.custosVendasPerdidas||0)+(fin.custosTerceirizacao||0)).toFixed(2);
+            return `
+                <ul class="mb-0">
+                    <li>Período: ${p}</li>
+                    <li>Receita: R$ ${Number(fin.receitaVendas||0).toFixed(2)}</li>
+                    <li>Custos: R$ ${custos}</li>
+                    <li>Resultado: R$ ${Number(fin.resultadoOperacional||0).toFixed(2)}</li>
+                    <li>Acumulado: R$ ${Number(fin.resultadoAcumulado||0).toFixed(2)}</li>
+                </ul>`;
+        }
+
+        function computeFinalTotals(pEnd) {
+            let receita = 0, custosCompras = 0, custosFixos = 0, custosEstoques = 0, custosPerdas = 0, custosTerce = 0, resultadoAcum = 0;
+            for (let p = 13; p <= pEnd; p++) {
+                const f = gameData.financeiro[p] || {};
+                receita += Number(f.receitaVendas||0);
+                custosCompras += Number(f.custosCompras||0);
+                custosFixos += Number(f.custosFixos||0);
+                custosEstoques += Number(f.custosEstoques||0);
+                custosPerdas += Number(f.custosVendasPerdidas||0);
+                custosTerce += Number(f.custosTerceirizacao||0);
+                resultadoAcum = Number(f.resultadoAcumulado||resultadoAcum);
+            }
+            return {
+                receita,
+                custos: custosCompras + custosFixos + custosEstoques + custosPerdas + custosTerce,
+                resultadoAcumulado: resultadoAcum
+            };
+        }
+
+        // Navegação de período
+        function changePeriod(delta) {
+            const newP = Math.min(24, Math.max(13, getPeriodoAtual() + delta));
+            gameData.config.periodoAtual = newP;
+            saveGameData();
+            updateAllDisplays();
+        }
+
+        // Cálculos principais
+        function computeCapacity(p) {
+            const prod = gameData.producao[p];
+            const recursos = gameData.capacidade[p];
+            // Disponível
+            const disp = {
+                tecelagem: (recursos.tecelagem.teares || 0) * (recursos.tecelagem.turnos || 0) * PROCESS_RATES.tecelagem,
+                purgaTinturaria: (recursos.purgaTinturaria.jets || 0) * (recursos.purgaTinturaria.turnos || 0) * PROCESS_RATES.purgaTinturaria,
+                fixacaoAcabamento: (recursos.fixacaoAcabamento.ramas || 0) * (recursos.fixacaoAcabamento.turnos || 0) * PROCESS_RATES.fixacaoAcabamento
+            };
+            // Necessária
+            const necess = { tecelagem: 0, purgaTinturaria: 0, fixacaoAcabamento: 0 };
+            PRODUCTS.forEach(k => {
+                const q = prod[k].planejada || 0;
+                necess.tecelagem += q * PROCESS_WEIGHTS[k].tecelagem;
+                necess.purgaTinturaria += q * PROCESS_WEIGHTS[k].purgaTinturaria;
+                necess.fixacaoAcabamento += q * PROCESS_WEIGHTS[k].fixacaoAcabamento;
+            });
+            return {
+                tecelagem: { necessaria: necess.tecelagem, disponivel: disp.tecelagem },
+                purgaTinturaria: { necessaria: necess.purgaTinturaria, disponivel: disp.purgaTinturaria },
+                fixacaoAcabamento: { necessaria: necess.fixacaoAcabamento, disponivel: disp.fixacaoAcabamento }
+            };
+        }
+
+        function computeServiceLevelTill(p) {
+            let dem = 0, vend = 0;
+            for (let i=13; i<=p; i++) {
+                PRODUCTS.forEach(k=>{ dem += gameData.demanda[i]?.[k]?.real || 0; vend += gameData.producao[i]?.[k]?.vendas || 0; });
+            }
+            return dem>0 ? vend/dem : 1;
+        }
+
+        function closePeriod() {
+            const p = getPeriodoAtual();
+            try {
+                // Bloqueia após término
+                if (gameData.config?.simulacaoConcluida || Number(gameData.config?.ultimoFechado||0) >= 24) {
+                    showToast('Simulação concluída. Não é possível fechar novos períodos.', 'info');
+                    updateGlobalActionsUI();
+                    return;
+                }
+                // 1) Demanda real
+                const cen = gameData.config.cenario;
+                PRODUCTS.forEach(k=>{
+                    const base = cen.demandaBase[p][k];
+                    const noise = (Math.random()*2 - 1) * cen.volatilidade; // -vol..+vol
+                    const real = Math.max(0, Math.round(base * (1 + noise)));
+                    gameData.demanda[p][k].real = real;
+                });
+                // 2) Compras realizadas
+                MATERIALS.forEach(m=>{
+                    const comp = gameData.compras[p][m];
+                    comp.real = comp.planejada || 0;
+                });
+                // 3) Capacidade e produção real
+                const cap = computeCapacity(p);
+                const fracCap = Math.min(
+                    cap.tecelagem.disponivel>0? cap.tecelagem.disponivel/Math.max(1,cap.tecelagem.necessaria):1,
+                    cap.purgaTinturaria.disponivel>0? cap.purgaTinturaria.disponivel/Math.max(1,cap.purgaTinturaria.necessaria):1,
+                    cap.fixacaoAcabamento.disponivel>0? cap.fixacaoAcabamento.disponivel/Math.max(1,cap.fixacaoAcabamento.necessaria):1
+                );
+                const frac = Math.min(1, isFinite(fracCap) ? fracCap : 1);
+                PRODUCTS.forEach(k=>{
+                    const planned = gameData.producao[p][k].planejada || 0;
+                    const real = Math.floor(planned * frac);
+                    gameData.producao[p][k].real = real;
+                });
+                // 4) Consumo de materiais
+                MATERIALS.forEach(m=>{
+                    const comp = gameData.compras[p][m];
+                    let consumo = 0;
+                    PRODUCTS.forEach(k=>{
+                        consumo += (gameData.producao[p][k].real || 0) * (BOM[k][m]||0);
+                    });
+                    comp.consumoReal = consumo;
+                    comp.estoqueFinal = Math.max(0, (comp.estoqueInicial||0) + (comp.real||0) - consumo);
+                });
+                // 5) Vendas e estoques de produtos
+                PRODUCTS.forEach(k=>{
+                    const estIni = gameData.producao[p][k].estoqueInicial || 0;
+                    const prodReal = gameData.producao[p][k].real || 0;
+                    const demReal = gameData.demanda[p][k].real || 0;
+                    const disponivel = estIni + prodReal;
+                    const vendas = Math.min(disponivel, demReal);
+                    const vendasPerdidas = Math.max(0, demReal - vendas);
+                    const estFin = disponivel - vendas;
+                    Object.assign(gameData.producao[p][k], { vendas, vendasPerdidas, estoqueFinal: estFin });
+                });
+                // 6) Financeiro
+                computeFinance(p);
+                // 7) Preparar próximo período
+                gameData.config.ultimoFechado = p;
+                if (p < 24) {
+                    const next = p+1;
+                    // Estoques iniciais
+                    PRODUCTS.forEach(k=>{ gameData.producao[next][k].estoqueInicial = gameData.producao[p][k].estoqueFinal; });
+                    MATERIALS.forEach(m=>{ gameData.compras[next][m].estoqueInicial = gameData.compras[p][m].estoqueFinal; });
+                    gameData.config.periodoAtual = next;
+                } else {
+                    gameData.config.simulacaoConcluida = true;
+                    showToast('Módulo concluído. Relatório final disponível.', 'info');
+                    showSection('relatorios');
+                }
+                saveGameData();
+                updateAllDisplays();
+                updateGlobalActionsUI();
+                showToast('Período fechado com sucesso!', 'success');
+            } catch (e) {
+                console.error(e);
+                showToast('Erro ao fechar período: '+e.message, 'danger');
+            }
+        }
+
+        function computeFinance(p) {
+            const cen = gameData.config.cenario;
+            const safeNum = (v, def=0) => Number.isFinite(Number(v)) ? Number(v) : def;
+            const getPrice = (k) => {
+                const v = cen?.precos?.[k];
+                return Number.isFinite(Number(v)) && Number(v) > 0 ? Number(v) : DEFAULT_PRICES[k];
+            };
+            // Receitas
+            let receita = 0; let perdidas = 0; let estoqueFinal = 0;
+            PRODUCTS.forEach(k=>{
+                const vendas = safeNum(gameData.producao[p][k].vendas, 0);
+                const preco = getPrice(k);
+                receita += vendas * preco;
+                perdidas += safeNum(gameData.producao[p][k].vendasPerdidas, 0);
+                estoqueFinal += safeNum(gameData.producao[p][k].estoqueFinal, 0);
+            });
+            // Compras custo
+            let custoCompras = 0; let estoqueMatFinal = 0;
+            MATERIALS.forEach(m=>{
+                custoCompras += safeNum(gameData.compras[p][m].real, 0) * safeNum(MATERIAL_COST[m], 0);
+                estoqueMatFinal += safeNum(gameData.compras[p][m].estoqueFinal, 0);
+            });
+            // Custos
+            const custoEstoque = (estoqueFinal + estoqueMatFinal) * safeNum(cen.custoEstoque, DEFAULT_COSTS.custoEstoque);
+            const custoPerdas = safeNum(cen.penalidadePerda, DEFAULT_COSTS.penalidadePerda) * perdidas;
+            const custosFixos = safeNum(cen.custosFixos, DEFAULT_COSTS.custosFixos);
+            // Terceirização aproximada pela folga negativa em capacidade
+            const cap = computeCapacity(p);
+            const shortTec = Math.max(0, cap.tecelagem.necessaria - cap.tecelagem.disponivel);
+            const shortJet = Math.max(0, cap.purgaTinturaria.necessaria - cap.purgaTinturaria.disponivel);
+            const shortRam = Math.max(0, cap.fixacaoAcabamento.necessaria - cap.fixacaoAcabamento.disponivel);
+            const custoTerce = (shortTec + shortJet + shortRam) * safeNum(cen.custoTerceirizacao, DEFAULT_COSTS.custoTerceirizacao);
+
+            const resultado = receita - (custoCompras + custosFixos + custoEstoque + custoPerdas + custoTerce);
+            const anterior = gameData.financeiro[p-1]?.resultadoAcumulado || 0;
+            gameData.financeiro[p] = {
+                custosFixos: custosFixos,
+                custosCompras: custoCompras,
+                custosEstoques: custoEstoque,
+                custosTerceirizacao: custoTerce,
+                custosCapital: 0,
+                custosVendasPerdidas: custoPerdas,
+                receitaVendas: receita,
+                resultadoOperacional: resultado,
+                resultadoAcumulado: anterior + resultado
+            };
+            console.debug('Financeiro período', p, gameData.financeiro[p]);
+        }
+    </script>
+</body>
+</html>
