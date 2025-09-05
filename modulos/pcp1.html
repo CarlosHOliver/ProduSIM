@@ -621,22 +621,29 @@
             }
         }
 
-        // Resetar dados do jogo
+        // Resetar dados do jogo (com recarregamento automático)
         function resetGameData() {
-            if (confirm('Tem certeza que deseja limpar todos os dados? Esta ação não pode ser desfeita.')) {
-                localStorage.removeItem('produSIM_pcp1');
-                gameData = {
-                    config: {},
-                    demanda: {},
-                    producao: {},
-                    compras: {},
-                    capacidade: {},
-                    financeiro: {},
-                    resultados: {}
-                };
-                showSection('inicio');
-                showToast('Dados resetados com sucesso!', 'info');
-            }
+            if (!confirm('Tem certeza que deseja limpar todos os dados? Esta ação não pode ser desfeita.')) return;
+            try { localStorage.removeItem('produSIM_pcp1'); } catch(e){ console.warn(e); }
+            // Zera estado em memória
+            gameData = { config: {}, demanda: {}, producao: {}, compras: {}, capacidade: {}, financeiro: {}, resultados: {} };
+            currentPeriod = 13; financeViewPeriod = null; reportViewPeriod = null;
+            // Limpa campos do formulário inicial
+            const ids = ['empresa','integrante1','integrante2','integrante3','integrante4','integrante5'];
+            ids.forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+            const setVal=(id,val)=>{ const el=document.getElementById(id); if(el) el.value=val; };
+            setVal('tipo-demanda','media'); setVal('tamanho-empresa','media');
+            // Painel de cenário: desmarca e recolhe; restaura defaults
+            const prof = document.getElementById('modo-professor'); if (prof){ prof.checked=false; }
+            const pnl = document.getElementById('painel-cenario'); if (pnl){ try{ new bootstrap.Collapse(pnl, {toggle:false}).hide(); }catch{} }
+            setVal('cen-vol','20'); setVal('cen-cust-estoque','2'); setVal('cen-penalidade','5'); setVal('cen-custos-fixos','5000');
+            setVal('preco-colmeia','20'); setVal('preco-piquet','28'); setVal('preco-maxim','35');
+            // Volta para início e atualiza UI
+            showSection('inicio'); updateGlobalActionsUI();
+            // Feedback e recarrega com cache-busting para evitar necessidade de Ctrl+F5
+            const reloadNow = ()=>{ try{ window.location.replace(window.location.pathname + window.location.search.split('?')[0] + '?reset=' + Date.now()); } catch { window.location.reload(); } };
+            showToast('Dados resetados. Recarregando...', 'info');
+            setTimeout(reloadNow, 150);
         }
 
         // Mostrar notificação
