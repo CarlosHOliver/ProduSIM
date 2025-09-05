@@ -1,0 +1,37 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='720' height='300' viewBox='0 0 720 300'>
+  <defs>
+    <style>
+      .box{fill:#ffffff;stroke:#198754;stroke-width:2;rx:10;ry:10}
+      .title{font:600 14px sans-serif;fill:#198754}
+      .label{font:500 12px sans-serif;fill:#212529}
+      .arrow{stroke:#198754;stroke-width:2;marker-end:url(#m)}
+    </style>
+    <marker id='m' markerWidth='10' markerHeight='10' refX='6' refY='3' orient='auto'>
+      <path d='M0,0 L0,6 L6,3 z' fill='#198754'/>
+    </marker>
+  </defs>
+  <rect width='100%' height='100%' fill='#f6fff9'/>
+
+  <g transform='translate(300,30)'>
+    <rect class='box' x='0' y='0' width='120' height='70'/>
+    <text class='title' x='60' y='28' text-anchor='middle'>Produto A</text>
+    <text class='label' x='60' y='48' text-anchor='middle'>LT A</text>
+  </g>
+
+  <g transform='translate(150,190)'>
+    <rect class='box' x='0' y='0' width='120' height='70'/>
+    <text class='title' x='60' y='28' text-anchor='middle'>Componente B</text>
+    <text class='label' x='60' y='48' text-anchor='middle'>LT B</text>
+  </g>
+
+  <g transform='translate(450,190)'>
+    <rect class='box' x='0' y='0' width='120' height='70'/>
+    <text class='title' x='60' y='28' text-anchor='middle'>Componente C</text>
+    <text class='label' x='60' y='48' text-anchor='middle'>LT C</text>
+  </g>
+
+  <line class='arrow' x1='360' y1='100' x2='210' y2='190'/>
+  <line class='arrow' x1='360' y1='100' x2='510' y2='190'/>
+
+  <text class='label' x='360' y='280' text-anchor='middle'>BOM do PCP2: A → {B, C} com LTs e explosão de necessidades via MRP</text>
+</svg>

@@ -31,9 +31,13 @@
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
           <li class="nav-item"><a class="nav-link active" href="#">Início</a></li>
           <li class="nav-item"><a class="nav-link" href="#regras">Regras do Jogo</a></li>
-          <li class="nav-item"><a class="nav-link" href="#info">Informações</a></li>
+          <li class="nav-item"><a class="nav-link" href="manual.html">Manual Completo</a></li>
+          <li class="nav-item"><a class="nav-link" href="#info">Sobre</a></li>
         </ul>
-        <a class="btn btn-primary" href="modulos/pcp1.html"><i class="bi bi-play-circle me-1"></i>Iniciar Módulo PCP1</a>
+        <div class="d-flex gap-2">
+          <a class="btn btn-primary" href="modulos/pcp1.html"><i class="bi bi-play-fill me-1"></i>Começar PCP1</a>
+          <a class="btn btn-outline-primary" href="modulos/pcp2.html"><i class="bi bi-play-fill me-1"></i>Começar PCP2</a>
+        </div>
       </div>
     </div>
   </nav>
@@ -45,18 +49,39 @@
           <h1 class="display-5 fw-bold">ProduSIM – Simulação de PCP</h1>
           <p class="lead mt-3">Aprenda Planejamento e Controle da Produção de forma prática, com tomada de decisões, visualizações e relatórios ao longo de períodos simulados.</p>
           <div class="d-flex gap-2 mt-3">
-            <a class="btn btn-light btn-lg" href="modulos/pcp1.html"><i class="bi bi-play-fill me-1"></i>Começar Módulo PCP1</a>
+            <a class="btn btn-light btn-lg" href="modulos/pcp1.html"><i class="bi bi-play-fill me-1"></i>Começar PCP1</a>
+            <a class="btn btn-outline-light btn-lg" href="modulos/pcp2.html"><i class="bi bi-play-fill me-1"></i>Começar PCP2</a>
             <a class="btn btn-outline-light btn-lg" href="#regras"><i class="bi bi-info-circle me-1"></i>Ver Regras</a>
           </div>
         </div>
         <div class="col-lg-5">
-          <div class="bg-white text-dark rounded-4 shadow p-4 text-start">
-            <h5 class="mb-3"><i class="bi bi-clipboard-data text-primary me-2"></i>Sobre o Módulo PCP1</h5>
-            <ul class="mb-0">
-              <li>Períodos simulados: 13 a 24</li>
-              <li>Áreas: Demanda, Produção, Compras, Capacidade, Financeiro</li>
-              <li>Relatório final em PDF ao concluir</li>
-            </ul>
+          <div id="heroModulesCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="5000">
+            <div class="carousel-inner">
+              <div class="carousel-item active">
+                <div class="bg-white text-dark rounded-4 shadow p-4 text-start">
+                  <h5 class="mb-3"><i class="bi bi-clipboard-data text-primary me-2"></i>Sobre o Módulo PCP1</h5>
+                  <ul class="mb-0">
+                    <li>Períodos simulados: 13 a 24</li>
+                    <li>Áreas: Demanda, Produção, Compras, Capacidade, Financeiro</li>
+                    <li>Relatório final em PDF ao concluir</li>
+                  </ul>
+                </div>
+              </div>
+              <div class="carousel-item">
+                <div class="bg-white text-dark rounded-4 shadow p-4 text-start">
+                  <h5 class="mb-3"><i class="bi bi-diagram-3 text-primary me-2"></i>Sobre o Módulo PCP2</h5>
+                  <ul class="mb-0">
+                    <li>Períodos simulados: 1 a 12</li>
+                    <li>MPS, MRP (A/B/C com LT e BOM), Sequenciamento e Capacidade</li>
+                    <li>Financeiro por período e relatório final em PDF</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            <div class="carousel-indicators" style="position: static; margin-top: 8px;">
+              <button type="button" data-bs-target="#heroModulesCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="PCP1"></button>
+              <button type="button" data-bs-target="#heroModulesCarousel" data-bs-slide-to="1" aria-label="PCP2"></button>
+            </div>
           </div>
         </div>
       </div>
@@ -103,41 +128,95 @@
 
     <section id="regras" class="bg-light py-5 anchor-offset">
       <div class="container">
-        <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
           <h2 class="mb-0"><i class="bi bi-info-circle text-primary me-2"></i>Regras do Jogo</h2>
-          <a class="btn btn-primary" href="modulos/pcp1.html"><i class="bi bi-play-circle me-1"></i>Iniciar agora</a>
+          <div class="d-flex gap-2">
+            <a class="btn btn-primary" href="modulos/pcp1.html"><i class="bi bi-play-fill me-1"></i>Começar PCP1</a>
+            <a class="btn btn-outline-primary" href="modulos/pcp2.html"><i class="bi bi-play-fill me-1"></i>Começar PCP2</a>
+          </div>
         </div>
-        <div class="row g-4">
-          <div class="col-lg-6">
-            <div class="card h-100">
-              <div class="card-body">
-                <h5>Objetivo</h5>
-                <p>Maximizar o <strong>Resultado Acumulado</strong> (lucro total) ao final do período 24, mantendo um <strong>Nível de Serviço</strong> elevado (mínimo recomendado: 90%).</p>
-                <h5>Como Jogar</h5>
-                <ul>
-                  <li><strong>Previsão:</strong> Ajuste a previsão com base na Demanda Base e histórico.</li>
-                  <li><strong>Produção:</strong> Planeje dentro da capacidade para evitar terceirização.</li>
-                  <li><strong>Compras:</strong> Compre insumos conforme o BOM e o plano de produção.</li>
-                  <li><strong>Serviço:</strong> Atenda a demanda minimizando perdas e estoques excessivos.</li>
-                  <li><strong>Fechamento:</strong> Feche o período e avalie o Financeiro para corrigir rumo.</li>
-                </ul>
+        <ul class="nav nav-pills mb-3" id="pills-tabs" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="tab-pcp1" data-bs-toggle="pill" data-bs-target="#pane-pcp1" type="button" role="tab" aria-controls="pane-pcp1" aria-selected="true">PCP1</button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="tab-pcp2" data-bs-toggle="pill" data-bs-target="#pane-pcp2" type="button" role="tab" aria-controls="pane-pcp2" aria-selected="false">PCP2</button>
+          </li>
+        </ul>
+        <div class="tab-content" id="pills-content">
+          <div class="tab-pane fade show active" id="pane-pcp1" role="tabpanel" aria-labelledby="tab-pcp1">
+            <div class="row g-4">
+              <div class="col-lg-6">
+                <div class="card h-100">
+                  <div class="card-body">
+                    <h5>Objetivo</h5>
+                    <p>Maximizar o <strong>Resultado Acumulado</strong> ao final do período 24, mantendo um <strong>Nível de Serviço</strong> elevado (≥ 90%).</p>
+                    <h5>Como Jogar</h5>
+                    <ul>
+                      <li><strong>Previsão:</strong> Ajuste a previsão com base na Demanda Base e histórico.</li>
+                      <li><strong>Produção:</strong> Planeje dentro da capacidade para evitar terceirização.</li>
+                      <li><strong>Compras:</strong> Compre insumos conforme o BOM e o plano de produção.</li>
+                      <li><strong>Serviço:</strong> Atenda a demanda minimizando perdas e estoques excessivos.</li>
+                      <li><strong>Fechamento:</strong> Feche o período e avalie o Financeiro para corrigir rumo.</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              <div class="col-lg-6">
+                <div class="card h-100">
+                  <div class="card-body">
+                    <h5>Critério de Vitória</h5>
+                    <ul>
+                      <li>Maior <strong>Resultado Acumulado</strong> no período 24.</li>
+                      <li>Desempate: maior <strong>Nível de Serviço</strong> acumulado.</li>
+                    </ul>
+                    <h5>Dicas</h5>
+                    <ul>
+                      <li>Evite perdas de venda e terceirização para preservar margens.</li>
+                      <li>Estoques altos custam; estoques baixos podem causar perdas.</li>
+                      <li>Use os gráficos e relatórios para ajustar o mix e o plano.</li>
+                    </ul>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-          <div class="col-lg-6">
-            <div class="card h-100">
-              <div class="card-body">
-                <h5>Critério de Vitória</h5>
-                <ul>
-                  <li>Vence quem tiver maior <strong>Resultado Acumulado</strong> no período 24.</li>
-                  <li>Desempate: maior <strong>Nível de Serviço</strong> acumulado.</li>
-                </ul>
-                <h5>Dicas</h5>
-                <ul>
-                  <li>Evite perdas de venda e terceirização para preservar margens.</li>
-                  <li>Estoques altos custam; estoques baixos podem causar perdas.</li>
-                  <li>Use os gráficos e relatórios para ajustar o mix e o plano.</li>
-                </ul>
+          <div class="tab-pane fade" id="pane-pcp2" role="tabpanel" aria-labelledby="tab-pcp2">
+            <div class="row g-4">
+              <div class="col-lg-6">
+                <div class="card h-100">
+                  <div class="card-body">
+                    <h5>Objetivo</h5>
+                    <p>Maximizar o <strong>Resultado Acumulado</strong> ao final do período 12, equilibrando atendimento da demanda, custos de estoque/setup/produção e backlog.</p>
+                    <h5>Como Jogar</h5>
+                    <ul>
+                      <li><strong>MPS:</strong> Defina o Plano Mestre do Produto A para todo o horizonte.</li>
+                      <li><strong>Política de Lote:</strong> Escolha L4L ou FOQ e seus parâmetros.</li>
+                      <li><strong>MRP:</strong> Ajuste SR e acompanhe GR, PAB, NR, PORc e PORl para A/B/C com LT.</li>
+                      <li><strong>Sequenciamento:</strong> Aplique FCFS/SPT/EDD e visualize fim e atraso das ordens.</li>
+                      <li><strong>Capacidade:</strong> Compare horas necessárias versus disponíveis e ajuste plano/regra.</li>
+                      <li><strong>Fechamento:</strong> Feche o período para consolidar demanda real e finanças.</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              <div class="col-lg-6">
+                <div class="card h-100">
+                  <div class="card-body">
+                    <h5>Critério de Vitória</h5>
+                    <ul>
+                      <li>Maior <strong>Resultado Acumulado</strong> no período 12.</li>
+                      <li>Desempate: maior <strong>Nível de Serviço</strong> e menor atraso médio.</li>
+                    </ul>
+                    <h5>Dicas</h5>
+                    <ul>
+                      <li>Alinhe o MPS à capacidade disponível para evitar atrasos.</li>
+                      <li>Considere LTs na liberação (PORl) para evitar rupturas em B/C.</li>
+                      <li>FOQ reduz setups, mas pode elevar holding; L4L minimiza estoque.</li>
+                      <li>Revise o sequenciamento quando a carga exceder as horas do período.</li>
+                    </ul>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -153,7 +232,7 @@
               <h5><i class="bi bi-journal-text text-primary me-2"></i>Sobre o Projeto</h5>
               <p class="mb-2">ProduSIM é um jogo de simulação para ensino de PCP, inspirado no LSSP_PCP e adaptado para web.</p>
               <ul class="mb-0">
-                <li>Módulo disponível: <strong>PCP1</strong></li>
+                <li>Módulos disponíveis: <strong>PCP1</strong> e <strong>PCP2</strong></li>
                 <li>Instituição: Universidade Federal da Grande Dourados - UFGD</li>
               </ul>
             </div>
@@ -203,7 +282,11 @@
       <div class="text-md-end">
         <div>Versão 1.0.0</div>
         <div>Baseado no LSSP_PCP</div>
-        <a class="btn btn-outline-light btn-sm mt-2" href="modulos/pcp1.html"><i class="bi bi-play-fill me-1"></i>Iniciar Módulo PCP1</a>
+        <div class="d-flex gap-2 mt-2">
+          <a class="btn btn-outline-light btn-sm" href="modulos/pcp1.html"><i class="bi bi-play-fill me-1"></i>Começar PCP1</a>
+          <a class="btn btn-outline-light btn-sm" href="modulos/pcp2.html"><i class="bi bi-play-fill me-1"></i>Começar PCP2</a>
+          <a class="btn btn-outline-light btn-sm" href="manual.html"><i class="bi bi-journal-text me-1"></i>Manual Completo</a>
+        </div>
       </div>
     </div>
   </footer>

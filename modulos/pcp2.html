@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ProduSIM - Módulo PCP2</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    .simulation-container { background-color: #f8f9fa; border-radius: 10px; padding: 20px; margin-bottom: 20px; }
+    .decision-panel { background-color: white; border-radius: 8px; padding: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 15px; }
+    .result-panel { background-color: white; border-left: 4px solid #0d6efd; border-radius: 8px; padding: 15px; margin-bottom: 15px; }
+    .table-sm td, .table-sm th { padding: .35rem; }
+    .small-muted { font-size: .875rem; color: #6c757d; }
+  </style>
+  <meta name="description" content="ProduSIM – Módulo PCP2: MPS/MRP, Sequenciamento e Capacidade Finita com finanças e relatórios.">
+</head>
+<body class="d-flex flex-column min-vh-100">
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container">
+      <a class="navbar-brand" href="../index.html"><i class="bi bi-speedometer2 me-2"></i>ProduSIM - PCP2</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div id="nav" class="collapse navbar-collapse">
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item"><a class="nav-link active" href="#" id="nav-inicio"><i class="bi bi-house-door me-1"></i>Início</a></li>
+          <li class="nav-item"><a class="nav-link" href="#" id="nav-mps"><i class="bi bi-calendar3 me-1"></i>MPS</a></li>
+          <li class="nav-item"><a class="nav-link" href="#" id="nav-mrp"><i class="bi bi-diagram-3 me-1"></i>MRP</a></li>
+          <li class="nav-item"><a class="nav-link" href="#" id="nav-seq"><i class="bi bi-list-ol me-1"></i>Sequenciamento</a></li>
+          <li class="nav-item"><a class="nav-link" href="#" id="nav-capacidade"><i class="bi bi-building me-1"></i>Capacidade</a></li>
+          <li class="nav-item"><a class="nav-link" href="#" id="nav-financeiro"><i class="bi bi-currency-dollar me-1"></i>Financeiro</a></li>
+          <li class="nav-item"><a class="nav-link" href="#" id="nav-relatorios"><i class="bi bi-clipboard-data me-1"></i>Relatórios</a></li>
+        </ul>
+        <div class="d-flex">
+          <button class="btn btn-outline-light me-2" id="btn-close-period" type="button"><i class="bi bi-check2-circle me-1"></i>Fechar Período</button>
+          <button class="btn btn-outline-light me-2" id="btn-save"><i class="bi bi-save me-1"></i>Salvar</button>
+          <button class="btn btn-outline-light" id="btn-reset"><i class="bi bi-trash me-1"></i>Limpar Dados</button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main class="flex-fill">
+    <div class="container mt-4">
+      <!-- Início -->
+      <div id="tela-inicio" class="content-section">
+        <div class="row">
+          <div class="col-md-8 mx-auto">
+            <div class="card">
+              <div class="card-header bg-primary text-white"><h4 class="mb-0"><i class="bi bi-pencil-square me-2"></i>Cadastro do Grupo – PCP2</h4></div>
+              <div class="card-body">
+                <div class="mb-3">
+                  <label class="form-label">Nome da Empresa</label>
+                  <input type="text" class="form-control" id="empresa" placeholder="Digite o nome da empresa">
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Integrantes do Grupo</label>
+                  <input type="text" class="form-control mb-2" id="integrante1" placeholder="Integrante 1">
+                  <input type="text" class="form-control mb-2" id="integrante2" placeholder="Integrante 2">
+                  <input type="text" class="form-control mb-2" id="integrante3" placeholder="Integrante 3">
+                  <input type="text" class="form-control mb-2" id="integrante4" placeholder="Integrante 4">
+                  <input type="text" class="form-control" id="integrante5" placeholder="Integrante 5">
+                </div>
+                <div class="mb-3">
+                  <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="modo-professor">
+                    <label class="form-check-label" for="modo-professor">Modo Avançado (configurar cenário)</label>
+                  </div>
+                </div>
+                <div class="collapse" id="painel-cenario">
+                  <div class="card card-body mb-3">
+                    <div class="row g-3">
+                      <div class="col-md-3">
+                        <label class="form-label">Volatilidade Demanda (%)</label>
+                        <input type="number" class="form-control" id="cen-vol" value="15">
+                      </div>
+                      <div class="col-md-3">
+                        <label class="form-label">LT Produto A (períodos)</label>
+                        <input type="number" class="form-control" id="lt-A" value="1">
+                      </div>
+                      <div class="col-md-3">
+                        <label class="form-label">LT Comp B</label>
+                        <input type="number" class="form-control" id="lt-B" value="1">
+                      </div>
+                      <div class="col-md-3">
+                        <label class="form-label">LT Comp C</label>
+                        <input type="number" class="form-control" id="lt-C" value="1">
+                      </div>
+                      <div class="col-md-4">
+                        <label class="form-label">Política de Lote</label>
+                        <select id="lote-politica" class="form-select">
+                          <option value="L4L">L4L (lote a lote)</option>
+                          <option value="FOQ">FOQ (lote fixo)</option>
+                        </select>
+                      </div>
+                      <div class="col-md-4">
+                        <label class="form-label">Tamanho do Lote FOQ</label>
+                        <input type="number" class="form-control" id="lote-foq" value="200">
+                      </div>
+                      <div class="col-md-4">
+                        <label class="form-label">Custos (Estoque/Setup/Produção/Backlog)</label>
+                        <input type="text" class="form-control" id="custos" value="2;50;10;8">
+                        <small class="text-muted">Formato: H;S;Cprod;Cback (por unidade/ordem)</small>
+                      </div>
+                      <div class="col-md-4">
+                        <label class="form-label">Horas de Capacidade por Período</label>
+                        <input type="number" class="form-control" id="cap-horas" value="80">
+                      </div>
+                      <div class="col-md-4">
+                        <label class="form-label">Tempo de Processamento por Lote (h)</label>
+                        <input type="number" class="form-control" id="tempo-lote" value="4">
+                      </div>
+                      <div class="col-md-4">
+                        <label class="form-label">Estoque Inicial (A;B;C)</label>
+                        <input type="text" class="form-control" id="estoques-iniciais" value="200;400;800">
+                        <small class="text-muted">Formato: A;B;C</small>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="d-grid"><button class="btn btn-success" id="btn-iniciar-jogo" type="button"><i class="bi bi-play-circle me-1"></i>Iniciar Jogo</button></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Telas -->
+      <div id="tela-mps" class="content-section d-none"></div>
+      <div id="tela-mrp" class="content-section d-none"></div>
+      <div id="tela-seq" class="content-section d-none"></div>
+      <div id="tela-capacidade" class="content-section d-none"></div>
+      <div id="tela-financeiro" class="content-section d-none"></div>
+      <div id="tela-relatorios" class="content-section d-none"></div>
+    </div>
+  </main>
+
+  <footer class="bg-dark text-light mt-auto py-3">
+    <div class="container d-flex justify-content-between align-items-center">
+      <div>
+        <div class="mb-0">ProduSIM - Sistema de Simulação de PCP</div>
+        <div class="mb-0">Desenvolvido por Carlos Henrique (LABINFO/FAEN/UFGD) - 2025</div>
+      </div>
+      <div class="text-end">
+        <div class="mb-0">Versão 1.0.0 - Módulo PCP2</div>
+        <button type="button" class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#modalRegras"><i class="bi bi-info-circle"></i> Regras do Jogo</button>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Modal Regras -->
+  <div class="modal fade" id="modalRegras" tabindex="-1" aria-labelledby="modalRegrasLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title" id="modalRegrasLabel"><i class="bi bi-info-circle me-2"></i>Regras do Jogo – PCP2</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body">
+          <h6>Objetivo</h6>
+          <p>Maximizar o <strong>Resultado Acumulado</strong> após 12 períodos, equilibrando atendimento da demanda, custos de <strong>estoque</strong>, <strong>setup</strong>, <strong>produção</strong> e <strong>backlog</strong>.</p>
+          <h6>Decisões do Aluno</h6>
+          <ul>
+            <li><strong>MPS:</strong> Plano Mestre do Produto A ao longo do horizonte.</li>
+            <li><strong>Política de lote:</strong> L4L ou FOQ (definir tamanho do lote quando FOQ).</li>
+            <li><strong>MRP:</strong> Ajustar SR e considerar os LTs para A/B/C (PAB, NR, PORc, PORl).</li>
+            <li><strong>Sequenciamento:</strong> Escolher regra <em>FCFS</em>, <em>SPT</em> ou <em>EDD</em>.</li>
+          </ul>
+          <h6>Critérios de Avaliação</h6>
+          <ul>
+            <li>Maior <strong>Resultado Acumulado</strong> ao final.</li>
+            <li>Desempate: maior <strong>Nível de Serviço</strong> e menor <strong>atraso médio</strong>.</li>
+          </ul>
+          <h6>Dicas</h6>
+          <ul>
+            <li>Alinhe o MPS à capacidade disponível para evitar atrasos.</li>
+            <li>Considere os LTs ao liberar ordens (PORl) para garantir B/C.</li>
+            <li>L4L minimiza estoque; FOQ reduz setups — avalie o trade-off.</li>
+          </ul>
+        </div>
+        <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Estado e constantes
+  let gameData = { config: {}, demanda: {}, mps: {}, estoque: {}, mrp: {}, seq: {}, capacidade: {}, financeiro: {}, resultados: {} };
+  let viewPeriod = null; // seletor de visualização (MPS)
+  let financeViewPeriod = null; // seletor de período no Financeiro
+  let reportViewPeriod = null;  // seletor de período em Relatórios
+  const PERIOD_START = 1, PERIOD_END = 12;
+  const ITEMS = { A: { name: 'Produto A', LT: 1, H: 2, S: 50, Cprod: 10, Cback: 8 }, B: { name: 'Comp B', LT: 1 }, C: { name: 'Comp C', LT: 1 } };
+    const BOM = { A: { B: 1, C: 2 } }; // A usa 1x B e 2x C
+
+  document.addEventListener('DOMContentLoaded', ()=>{ loadGameData(); setupEventListeners(); initializeGame(); });
+
+    function setupEventListeners(){
+      ['inicio','mps','mrp','seq','capacidade','financeiro','relatorios'].forEach(id=>{
+        const el = document.getElementById('nav-'+id); if (el) el.addEventListener('click',(e)=>{ e.preventDefault(); showSection(id); });
+      });
+      document.getElementById('btn-iniciar-jogo')?.addEventListener('click', iniciarJogo);
+      document.getElementById('btn-save')?.addEventListener('click', saveGameData);
+      document.getElementById('btn-reset')?.addEventListener('click', resetGameData);
+      document.getElementById('btn-close-period')?.addEventListener('click', closePeriod);
+      const prof = document.getElementById('modo-professor');
+      if (prof) prof.addEventListener('change',(e)=>{
+        const pnl = document.getElementById('painel-cenario');
+        const bs = new bootstrap.Collapse(pnl, { toggle:false });
+        e.target.checked ? bs.show() : bs.hide();
+      });
+    }
+
+    function initializeGame(){
+      if (gameData.config.empresa){ showSection('mps'); updateAll(); updateGlobalActionsUI(); }
+      else { showSection('inicio'); updateGlobalActionsUI(); }
+    }
+
+    function showSection(section){
+      document.querySelectorAll('.content-section').forEach(el=>el.classList.add('d-none'));
+      document.getElementById('tela-'+section)?.classList.remove('d-none');
+      document.querySelectorAll('.nav-link').forEach(el=>el.classList.remove('active'));
+      document.getElementById('nav-'+section)?.classList.add('active');
+      updateGlobalActionsUI();
+      if (section==='mps') renderMPS();
+      if (section==='mrp') renderMRP();
+      if (section==='seq') renderSequenciamento();
+      if (section==='capacidade') renderCapacidade();
+      if (section==='financeiro') renderFinanceiro();
+      if (section==='relatorios') renderRelatorios();
+    }
+
+    function iniciarJogo(){
+      const empresa = document.getElementById('empresa').value.trim();
+      const integ = ['integrante1','integrante2','integrante3','integrante4','integrante5']
+          .map(id=> document.getElementById(id).value.trim()).filter(v=>v);
+      if (!empresa || integ.length===0){ alert('Preencha empresa e pelo menos um integrante.'); return; }
+      const cfg = collectScenarioConfig();
+      gameData.config = { empresa, integrantes: integ, periodoAtual: PERIOD_START, ultimoFechado: 0, concluida: false, cenario: cfg, dataInicio: new Date().toISOString() };
+      initializeData(); saveGameData(); showSection('mps'); updateAll(); toast('Jogo PCP2 iniciado!', 'success');
+    }
+
+    function collectScenarioConfig(){
+      const vol = Number(document.getElementById('cen-vol')?.value||15)/100;
+      const ltA = Number(document.getElementById('lt-A')?.value||1);
+      const ltB = Number(document.getElementById('lt-B')?.value||1);
+      const ltC = Number(document.getElementById('lt-C')?.value||1);
+      const pol = document.getElementById('lote-politica')?.value||'L4L';
+  const foq = Number(document.getElementById('lote-foq')?.value||200);
+  const [H,S,Cprod,Cback] = (document.getElementById('custos')?.value||'2;50;10;8').split(';').map(Number);
+  const capH = Number(document.getElementById('cap-horas')?.value||80);
+  const tempoLote = Number(document.getElementById('tempo-lote')?.value||4);
+  const [eA,eB,eC] = (document.getElementById('estoques-iniciais')?.value||'200;400;800').split(';').map(Number);
+  ITEMS.A.LT=ltA; ITEMS.B.LT=ltB; ITEMS.C.LT=ltC; ITEMS.A.H=H; ITEMS.A.S=S; ITEMS.A.Cprod=Cprod; ITEMS.A.Cback=Cback;
+      // Demanda base simples
+  const base = {}; for (let p=PERIOD_START; p<=PERIOD_END; p++){ base[p] = Math.round(400 + 50*Math.sin(p)); }
+  return { volatilidade: vol, politica: pol, foq, demandaBase: base, capHoras: capH, tempoLote, estIni: {A:eA,B:eB,C:eC} };
+    }
+
+    function initializeData(){
+      gameData.demanda = {}; gameData.mps = {}; gameData.estoque = {}; gameData.mrp = { A:{}, B:{}, C:{} }; gameData.seq = {}; gameData.capacidade={}; gameData.financeiro={}; gameData.resultados={};
+      for (let p=PERIOD_START; p<=PERIOD_END; p++){
+        gameData.demanda[p] = { prevista: 0, real: 0 };
+        gameData.mps[p] = { plano: 0 };
+        gameData.estoque[p] = { A: p===PERIOD_START? gameData.config.cenario.estIni.A:0, B: p===PERIOD_START? gameData.config.cenario.estIni.B:0, C: p===PERIOD_START? gameData.config.cenario.estIni.C:0 };
+        gameData.mrp.A[p] = { GR:0, SR:0, PAB:0, NR:0, PORc:0, PORl:0 };
+        gameData.mrp.B[p] = { GR:0, SR:0, PAB:0, NR:0, PORc:0, PORl:0 };
+        gameData.mrp.C[p] = { GR:0, SR:0, PAB:0, NR:0, PORc:0, PORl:0 };
+        gameData.seq[p] = { regra: 'FCFS', ordens: [] };
+        gameData.capacidade[p] = { disponivelH: gameData.config.cenario.capHoras, necessariaH: 0 };
+        gameData.financeiro[p] = { holding:0, setup:0, producao:0, backlog:0, resultado:0, acumulado:0 };
+      }
+    }
+
+    function updateAll(){ renderMPS(); renderMRP(); renderSequenciamento(); renderCapacidade(); renderFinanceiro(); }
+
+    function renderMPS(){
+      const el = document.getElementById('tela-mps'); if (!el) return;
+      const pAtual = gameData.config?.periodoAtual||PERIOD_START;
+      const th = Array.from({length: PERIOD_END-PERIOD_START+1}, (_,i)=> `<th class="text-center">${PERIOD_START+i}</th>`).join('');
+      const row = (label, arr, editable=false, idPrefix='')=> `<tr><th>${label}</th>${arr.map((v,i)=> `<td>${editable? `<input type="number" class="form-control form-control-sm" id="${idPrefix}-${PERIOD_START+i}" value="${v}" min="0">` : v}</td>`).join('')}</tr>`;
+      const base = [], prev=[], plano=[], estIni=[], ltA=ITEMS.A.LT;
+      for (let p=PERIOD_START;p<=PERIOD_END;p++){ base.push(gameData.config.cenario.demandaBase[p]); prev.push(gameData.demanda[p].prevista||0); plano.push(gameData.mps[p].plano||0); estIni.push(gameData.estoque[p].A||0); }
+      el.innerHTML = `
+        <div class="simulation-container">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h5 class="mb-0"><i class="bi bi-calendar3 text-primary me-2"></i>MPS – Horizonte ${PERIOD_START}–${PERIOD_END}</h5>
+            <div class="d-flex align-items-center gap-2">
+              <label class="small-muted">Período:</label>
+              <select id="sel-periodo" class="form-select form-select-sm" style="width:auto">${Array.from({length:PERIOD_END-PERIOD_START+1},(_,i)=>{const p=PERIOD_START+i; return `<option value="${p}" ${p===pAtual?'selected':''}>${p}</option>`;}).join('')}</select>
+              <button class="btn btn-sm btn-outline-secondary" id="btn-prev"><i class="bi bi-arrow-left"></i></button>
+              <button class="btn btn-sm btn-outline-secondary" id="btn-next"><i class="bi bi-arrow-right"></i></button>
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-sm align-middle">
+              <thead><tr><th></th>${th}</tr></thead>
+              <tbody>
+                ${row('Demanda Base', base)}
+                ${row('Demanda Prevista', prev, true, 'prev')}
+                ${row('Plano Mestre A', plano, true, 'plan')}
+                ${row('Estoque Inicial A', estIni)}
+              </tbody>
+            </table>
+          </div>
+          <div class="small-muted">Política: ${gameData.config.cenario.politica}${gameData.config.cenario.politica==='FOQ'? ' (FOQ='+gameData.config.cenario.foq+')':''} | LT A: ${ltA} | Capacidade (h/Per): ${gameData.config.cenario.capHoras}</div>
+        </div>`;
+      document.getElementById('btn-prev').onclick=()=> changePeriod(-1);
+      document.getElementById('btn-next').onclick=()=> changePeriod(1);
+      document.getElementById('sel-periodo')?.addEventListener('change',(e)=>{ gameData.config.periodoAtual=Number(e.target.value); saveGameData(); updateAll(); });
+      for (let p=PERIOD_START;p<=PERIOD_END;p++){
+        document.getElementById(`prev-${p}`)?.addEventListener('change',(e)=>{ gameData.demanda[p].prevista=Number(e.target.value)||0; saveGameData(); updateAll(); });
+        document.getElementById(`plan-${p}`)?.addEventListener('change',(e)=>{ gameData.mps[p].plano=Number(e.target.value)||0; saveGameData(); updateAll(); });
+      }
+    }
+
+    function renderMRP(){
+      const el = document.getElementById('tela-mrp'); if (!el) return;
+      computeMRP();
+      const tableFor = (item)=>{
+        const inputsSR = [];
+        const body = [];
+        for (let t=PERIOD_START; t<=PERIOD_END; t++){
+          const r = gameData.mrp[item][t];
+          inputsSR.push(`<td><input type="number" class="form-control form-control-sm inp-sr" data-item="${item}" data-t="${t}" value="${r.SR||0}" min="0"></td>`);
+          body.push(`<tr><th>${t}</th><td>${r.GR}</td><td>${r.SR}</td><td>${r.PAB}</td><td>${r.NR}</td><td>${r.PORc}</td><td>${r.PORl}</td></tr>`);
+        }
+        return `
+          <div class="col-12">
+            <div class="card mb-3">
+              <div class="card-header fw-bold d-flex justify-content-between align-items-center">
+                <span>${item}</span>
+                <span class="small text-muted">LT: ${ITEMS[item].LT}${item==='A'? ' | Plano Mestre guia a liberação':''}</span>
+              </div>
+              <div class="card-body">
+                <div class="small-muted mb-1">Recebimentos Agendados (SR) – edite conforme necessário</div>
+                <div class="table-responsive mb-2"><table class="table table-sm mb-0"><thead><tr><th></th>${Array.from({length:PERIOD_END-PERIOD_START+1},(_,i)=>`<th>${PERIOD_START+i}</th>`).join('')}</tr></thead><tbody><tr><th>SR</th>${inputsSR.join('')}</tr></tbody></table></div>
+                <div class="table-responsive"><table class="table table-sm mb-0"><thead><tr><th>Período</th><th>GR</th><th>SR</th><th>PAB</th><th>NR</th><th>PORc</th><th>PORl</th></tr></thead><tbody>${body.join('')}</tbody></table></div>
+              </div>
+            </div>
+          </div>`;
+      };
+      el.innerHTML = `<div class="simulation-container"><h5 class="mb-3"><i class="bi bi-diagram-3 text-primary me-2"></i>MRP</h5><div class="row g-3">${['A','B','C'].map(tableFor).join('')}</div></div>`;
+      el.querySelectorAll('.inp-sr').forEach(inp=> inp.addEventListener('change',(e)=>{ const it=e.target.dataset.item; const t=Number(e.target.dataset.t); gameData.mrp[it][t].SR=Number(e.target.value)||0; saveGameData(); renderMRP(); }));
+    }
+
+  function lotSize(q){ const pol = gameData.config.cenario.politica; if (pol==='L4L') return q; const foq = gameData.config.cenario.foq; if (q<=0) return 0; return Math.ceil(q/foq)*foq; }
+
+    // Sequenciamento puro (sem tocar UI): constrói ordens do período p e atualiza gameData.seq[p]
+    function computeSequenciamentoForPeriod(p){
+      if (!gameData.seq[p]) gameData.seq[p] = { regra:'FCFS', ordens:[] };
+      const regra = gameData.seq[p].regra || 'FCFS';
+      let ordQtde = Number(gameData.mrp.A[p]?.PORl || 0);
+      if (ordQtde<=0){ ordQtde = Number(gameData.mps[p]?.plano || gameData.demanda[p]?.prevista || 0); }
+      const jobs = [];
+      if (ordQtde>0){
+        // Tamanho de lote processual (capacidade): usa FOQ como referência, independentemente da política do MRP
+        // Se FOQ não definido, usa 100 como padrão de lote processual
+        const chunk = Math.max(1, Number(gameData.config.cenario.foq||100));
+        const n = Math.max(1, Math.ceil(ordQtde/chunk));
+        for (let i=0;i<n;i++){
+          const q = Math.min(chunk, ordQtde - i*chunk);
+          jobs.push({ id:`A-${p}-${i+1}`, procH: gameData.config.cenario.tempoLote, qtde: q });
+        }
+      }
+      let seq = jobs.slice();
+      if (regra==='SPT') seq.sort((a,b)=> a.procH - b.procH);
+      if (regra==='EDD') seq.sort((a,b)=> 0); // EDD simples (todos vencem no fim do período)
+      gameData.seq[p].ordens = seq;
+      return seq;
+    }
+
+    function computeMRP(){
+      // Reset PORl for recalculation
+      ['A','B','C'].forEach(it=>{ for (let t=PERIOD_START; t<=PERIOD_END; t++){ gameData.mrp[it][t].PORl = 0; gameData.mrp[it][t].PORc = 0; gameData.mrp[it][t].PAB = 0; gameData.mrp[it][t].GR = 0; } });
+      // A: demanda bruta guiada pelo MPS ou real quando fechado
+      for (let t=PERIOD_START; t<=PERIOD_END; t++){
+        const dem = (t <= gameData.config.ultimoFechado) ? (gameData.demanda[t].real||0) : (gameData.mps[t].plano||gameData.demanda[t].prevista||0);
+        gameData.mrp.A[t].GR = dem;
+      }
+      // Calcula PAB/NR/PORc para A, com SR e LT
+      for (let t=PERIOD_START; t<=PERIOD_END; t++){
+        const SR = Number(gameData.mrp.A[t].SR||0);
+        const GR = Number(gameData.mrp.A[t].GR||0);
+        let PABprev = (t===PERIOD_START? Number(gameData.estoque[t].A||0) : Number(gameData.mrp.A[t-1].PAB||0));
+        let PAB = PABprev + SR - GR;
+        let NR = 0, PORc = 0;
+        if (PAB < 0){ NR = Math.abs(PAB); PORc = lotSize(NR); PAB += PORc; const relT = Math.max(PERIOD_START, t - ITEMS.A.LT); gameData.mrp.A[relT].PORl += PORc; }
+        Object.assign(gameData.mrp.A[t], { SR, GR, PAB: Math.max(0, Math.round(PAB)), NR: Math.round(NR), PORc: Math.round(PORc) });
+      }
+      // B e C: GR vem do PORl de A * BOM, depois mesma lógica
+      ['B','C'].forEach(it=>{ for (let t=PERIOD_START; t<=PERIOD_END; t++){ gameData.mrp[it][t].GR = 0; } });
+      for (let t=PERIOD_START; t<=PERIOD_END; t++){
+        const reqA = Number(gameData.mrp.A[t].PORl||0);
+        gameData.mrp.B[t].GR += reqA * (BOM.A.B||0);
+        gameData.mrp.C[t].GR += reqA * (BOM.A.C||0);
+      }
+      ['B','C'].forEach(it=>{
+        for (let t=PERIOD_START; t<=PERIOD_END; t++){
+          const SR = Number(gameData.mrp[it][t].SR||0);
+          const GR = Number(gameData.mrp[it][t].GR||0);
+          let PABprev = (t===PERIOD_START? Number(gameData.estoque[t][it]||0) : Number(gameData.mrp[it][t-1].PAB||0));
+          let PAB = PABprev + SR - GR;
+          let NR=0, PORc=0;
+          if (PAB < 0){ NR = Math.abs(PAB); PORc = lotSize(NR); PAB += PORc; const relT = Math.max(PERIOD_START, t - ITEMS[it].LT); gameData.mrp[it][relT].PORl += PORc; }
+          Object.assign(gameData.mrp[it][t], { SR, GR, PAB: Math.max(0, Math.round(PAB)), NR: Math.round(NR), PORc: Math.round(PORc) });
+        }
+      });
+    }
+
+    function renderSequenciamento(){
+      const p = gameData.config?.periodoAtual||PERIOD_START; const el = document.getElementById('tela-seq'); if (!el) return;
+      computeMRP();
+      const regra = gameData.seq[p]?.regra || 'FCFS';
+      const seq = computeSequenciamentoForPeriod(p);
+      gameData.seq[p].regra = regra;
+      const horasPeriodo = Number(gameData.config.cenario.capHoras||0);
+      el.innerHTML = `
+        <div class="simulation-container">
+          <div class="d-flex justify-content-between align-items-center mb-2"><h5 class="mb-0"><i class="bi bi-list-ol text-primary me-2"></i>Sequenciamento – Período ${p}</h5>
+            <div class="d-flex align-items-center gap-2">
+              <label class="small text-muted">Regra:</label>
+              <select id="sel-regra" class="form-select form-select-sm" style="width:auto"><option value="FCFS" ${regra==='FCFS'?'selected':''}>FCFS</option><option value="SPT" ${regra==='SPT'?'selected':''}>SPT</option><option value="EDD" ${regra==='EDD'?'selected':''}>EDD</option></select>
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-sm">
+              <thead><tr><th>Ordem</th><th>Qtd</th><th>Tempo Proc. (h)</th><th>Due (h)</th><th>Fim (h)</th><th>Atraso (h)</th></tr></thead>
+              <tbody>${(()=>{ let clock=0; return (seq||[]).map(j=>{ const end=clock + j.procH; const atraso=Math.max(0, end - horasPeriodo); const row=`<tr><td>${j.id}</td><td>${j.qtde}</td><td>${j.procH}</td><td>${horasPeriodo}</td><td>${end.toFixed(1)}</td><td>${atraso.toFixed(1)}</td></tr>`; clock=end; return row; }).join('') || '<tr><td colspan="6" class="text-muted">Sem ordens neste período.</td></tr>'; })()}</tbody>
+            </table>
+          </div>
+        </div>`;
+  document.getElementById('sel-regra')?.addEventListener('change',(e)=>{ gameData.seq[p].regra=e.target.value; saveGameData(); renderSequenciamento(); renderCapacidade(); renderFinanceiro(); });
+    }
+
+    function renderCapacidade(){
+      const p = gameData.config?.periodoAtual||PERIOD_START; const el = document.getElementById('tela-capacidade'); if (!el) return;
+      // Garante que as ordens do período foram construídas (sem tocar UI)
+      computeSequenciamentoForPeriod(p);
+      const horasDisp = gameData.capacidade[p].disponivelH;
+      const horasNec = (gameData.seq[p].ordens||[]).reduce((s,j)=> s + j.procH, 0);
+      gameData.capacidade[p].necessariaH = horasNec;
+      const util = horasDisp>0? Math.round(Math.min(100, (horasNec/horasDisp)*100)):0;
+      el.innerHTML = `<div class="simulation-container"><h5 class="mb-3"><i class="bi bi-building text-primary me-2"></i>Capacidade – Período ${p}</h5>
+        <div class="result-panel"><div class="d-flex justify-content-between"><span>Necessária (h)</span><strong>${horasNec}</strong></div>
+        <div class="d-flex justify-content-between"><span>Disponível (h)</span><strong>${horasDisp}</strong></div>
+        <div class="progress mt-2"><div class="progress-bar ${util>100?'bg-danger':''}" style="width:${Math.min(util,100)}%">${util}%</div></div></div></div>`;
+    }
+
+    function renderFinanceiro(){
+      const el = document.getElementById('tela-financeiro'); if (!el) return;
+      // Certifica que sequenciamento do período atual está gerado (sem UI)
+      computeSequenciamentoForPeriod(gameData.config?.periodoAtual||PERIOD_START);
+      const pAtual = gameData.config?.periodoAtual||PERIOD_START;
+      const pEnd = Math.max(gameData.config.ultimoFechado||0, PERIOD_START);
+      const p = financeViewPeriod || pEnd;
+      computeFinance(p);
+      const f = gameData.financeiro[p] || {};
+      el.innerHTML = `<div class="simulation-container"><div class="d-flex justify-content-between align-items-center">
+          <h5 class="mb-3"><i class="bi bi-currency-dollar text-primary me-2"></i>Financeiro – Período ${p}</h5>
+          <div class="d-flex align-items-center gap-2">
+            <label class="small text-muted">Ver período:</label>
+            <select id="sel-fin-p" class="form-select form-select-sm" style="width:auto">${Array.from({length: (pEnd-PERIOD_START+1)},(_,i)=>{const pi=PERIOD_START+i; return `<option value='${pi}' ${pi===p?'selected':''}>${pi}</option>`; }).join('')}</select>
+            ${p!==pAtual? `<span class="badge text-bg-light">Atual: ${pAtual}</span>`:''}
+          </div>
+        </div>
+        <div class="row g-3">${[['Custo de Estoque',-f.holding],['Setup',-f.setup],['Produção',-f.producao],['Backlog',-f.backlog],['Resultado',f.resultado]].map(([k,v])=>`<div class='col-md-4'><div class='result-panel'><div class='text-muted small'>${k}</div><div class='fs-5'>R$ ${Number(v||0).toFixed(2)}</div></div></div>`).join('')}</div>
+        <div class="result-panel"><div class="d-flex justify-content-between"><span>Acumulado</span><strong>R$ ${Number(f.acumulado||0).toFixed(2)}</strong></div></div></div>`;
+      document.getElementById('sel-fin-p')?.addEventListener('change',(e)=>{ financeViewPeriod = Number(e.target.value)||pEnd; renderFinanceiro(); });
+    }
+
+    function computeFinance(p){
+      // custos: holding sobre PAB de A,B,C; setup por ordem (seq); produção por unidade produzida A (ou ordens do sequenciamento se PORc=0); backlog por falta de A
+  const H = ITEMS.A.H, S = ITEMS.A.S, Cprod = ITEMS.A.Cprod, Cback = ITEMS.A.Cback;
+  const estFinA = Number(gameData.mrp.A[p].PAB||0), estFinB = Number(gameData.mrp.B[p].PAB||0), estFinC = Number(gameData.mrp.C[p].PAB||0);
+  const ordens = gameData.seq[p].ordens||[];
+  const horasPeriodo = Number(gameData.config.cenario.capHoras||0);
+  // Quantidade produzida considerada no período: apenas ordens concluídas dentro da capacidade
+  let clock=0, setupsEfetivos=0, prodConcluida=0;
+  for (const j of ordens){ const end=clock + j.procH; if (end<=horasPeriodo){ prodConcluida += Number(j.qtde||0); setupsEfetivos++; } clock=end; }
+  const setups = setupsEfetivos;
+  const prod = prodConcluida;
+      const demanda = Number(gameData.demanda[p].real || gameData.demanda[p].prevista || 0);
+  const disponibilA = Number((p===PERIOD_START? gameData.estoque[p].A: gameData.mrp.A[p-1].PAB)||0) + prod;
+  const atendido = Math.min(demanda, disponibilA);
+  const backlog = Math.max(0, demanda - atendido);
+  const holding = (estFinA + estFinB + estFinC) * H;
+  const setup = setups * S;
+  const producao = prod * Cprod;
+  const backc = backlog * Cback;
+  const resultado = - (holding + setup + producao + backc);
+  const acum = (gameData.financeiro[p-1]?.acumulado||0) + resultado;
+  gameData.financeiro[p] = { holding, setup, producao, backlog: backc, resultado, acumulado: acum };
+    }
+
+    function recomputeFinanceUpTo(pEnd){
+      computeMRP();
+      for (let t=PERIOD_START; t<=pEnd; t++){
+        // Constrói ordens do período t
+        computeSequenciamentoForPeriod(t);
+        // Se não houver demanda real até t, usa prevista
+        if (!gameData.demanda[t].real && !gameData.demanda[t].prevista){
+          gameData.demanda[t].prevista = Number(gameData.mps[t].plano||0);
+        }
+        computeFinance(t);
+      }
+    }
+
+    function renderRelatorios(){
+      const el = document.getElementById('tela-relatorios'); if (!el) return;
+      // Garante sequenciamento antes de cálculos financeiros
+      renderSequenciamento();
+      const pEnd = Math.max(gameData.config.ultimoFechado||0, PERIOD_START);
+      const concluida = pEnd>=PERIOD_END;
+      // Totais parciais até pEnd, finais se concluída
+      const totals = { holding:0, setup:0, producao:0, backlog:0, resultado:0, acumulado:0 };
+  for (let p=PERIOD_START; p<= (concluida?PERIOD_END:pEnd); p++){ computeSequenciamentoForPeriod(p); computeFinance(p); const f = gameData.financeiro[p]||{}; Object.keys(totals).forEach(k=> totals[k]+= Number(f[k]||0)); totals.acumulado = f.acumulado||totals.acumulado; }
+      const pSel = reportViewPeriod || pEnd;
+      const finSel = gameData.financeiro[pSel] || {};
+      el.innerHTML = `<div class="simulation-container"><div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="mb-0"><i class="bi bi-clipboard-data text-primary me-2"></i>${concluida? 'Relatório Final':'Relatório Parcial'}</h5>
+          <button id="btn-pdf" class="btn btn-outline-primary btn-sm" ${concluida?'':'disabled'}><i class="bi bi-filetype-pdf me-1"></i>Exportar PDF</button>
+        </div>
+        ${!concluida ? '<div class="alert alert-warning">O relatório final estará disponível ao término do período. Abaixo um resumo parcial.</div>' : ''}
+        <div class="row g-3">
+          <div class="col-md-6"><div class="result-panel"><div class="fw-bold mb-2">Resumo Financeiro (${concluida? 'Total Simulação': 'Até Período '+pEnd})</div>
+            <ul class="mb-0"><li>Custos de Estoque: R$ ${totals.holding.toFixed(2)}</li><li>Setups: R$ ${totals.setup.toFixed(2)}</li><li>Produção: R$ ${totals.producao.toFixed(2)}</li><li>Backlog: R$ ${totals.backlog.toFixed(2)}</li><li>Resultado acumulado: R$ ${totals.acumulado.toFixed(2)}</li></ul>
+          </div></div>
+          <div class="col-md-6"><div class="result-panel">
+            <div class="d-flex justify-content-between align-items-center">
+              <div class="fw-bold mb-2">Detalhe por Período</div>
+              <div class="d-flex align-items-center gap-2">
+                <label class="small text-muted">Ver período:</label>
+                <select id="sel-rel-p" class="form-select form-select-sm" style="width:auto">${Array.from({length: (pEnd-PERIOD_START+1)},(_,i)=>{const pi=PERIOD_START+i; return `<option value='${pi}' ${pi===pSel?'selected':''}>${pi}</option>`; }).join('')}</select>
+              </div>
+            </div>
+            <div id="relatorio-periodo-detalhe">
+              ${renderReportPeriodDetailHTML(pSel, finSel)}
+            </div>
+          </div></div>
+        </div>
+      </div>`;
+      document.getElementById('btn-pdf')?.addEventListener('click', generateFinalPDF);
+      document.getElementById('sel-rel-p')?.addEventListener('change',(e)=>{ reportViewPeriod = Number(e.target.value)||pEnd; const fin = gameData.financeiro[reportViewPeriod]||{}; const cont = document.getElementById('relatorio-periodo-detalhe'); if (cont) cont.innerHTML = renderReportPeriodDetailHTML(reportViewPeriod, fin); });
+    }
+
+    function renderReportPeriodDetailHTML(p, fin){
+      return `<ul class="mb-0"><li>Período: ${p}</li><li>Holding: R$ ${Number(fin.holding||0).toFixed(2)}</li><li>Setups: R$ ${Number(fin.setup||0).toFixed(2)}</li><li>Produção: R$ ${Number(fin.producao||0).toFixed(2)}</li><li>Backlog: R$ ${Number(fin.backlog||0).toFixed(2)}</li><li>Resultado: R$ ${Number(fin.resultado||0).toFixed(2)}</li><li>Acumulado: R$ ${Number(fin.acumulado||0).toFixed(2)}</li></ul>`;
+    }
+
+    function closePeriod(){
+      const p = gameData.config?.periodoAtual||PERIOD_START;
+      if (gameData.config.concluida){ toast('Simulação concluída.', 'info'); updateGlobalActionsUI(); return; }
+      if ((gameData.config.ultimoFechado||0) >= PERIOD_END){ toast('Simulação concluída.', 'info'); gameData.config.concluida = true; updateGlobalActionsUI(); return; }
+      if (p <= (gameData.config.ultimoFechado||0)){ toast('Período já fechado.', 'warning'); updateGlobalActionsUI(); return; }
+      // Demanda real com ruído
+      const base = gameData.config.cenario.demandaBase[p]; const vol = gameData.config.cenario.volatilidade; const noise = (Math.random()*2-1)*vol; const real = Math.max(0, Math.round(base*(1+noise)));
+      gameData.demanda[p].real = real;
+      // Recalcula MRP e transfere estoques (PAB) para próximo período
+      computeMRP();
+      if (p<PERIOD_END){
+        gameData.estoque[p+1].A = Number(gameData.mrp.A[p].PAB||0);
+        gameData.estoque[p+1].B = Number(gameData.mrp.B[p].PAB||0);
+        gameData.estoque[p+1].C = Number(gameData.mrp.C[p].PAB||0);
+      }
+      // Financeiro cumulativo até o último fechado
+      gameData.config.ultimoFechado = p;
+      recomputeFinanceUpTo(gameData.config.ultimoFechado);
+      // Atualiza período atual e estado final
+      if (p<PERIOD_END){ gameData.config.periodoAtual = p+1; } else { gameData.config.concluida = true; toast('Módulo PCP2 concluído. Relatório final disponível.', 'info'); showSection('relatorios'); }
+      // Reset seleção para mostrar o último período fechado automaticamente
+      financeViewPeriod = null; reportViewPeriod = gameData.config.ultimoFechado;
+      saveGameData(); updateAll(); updateGlobalActionsUI();
+      toast('Período fechado!', 'success');
+    }
+
+  function changePeriod(d){ const p = gameData.config?.periodoAtual||PERIOD_START; const n = Math.max(PERIOD_START, Math.min(PERIOD_END, p+d)); gameData.config.periodoAtual = n; saveGameData(); updateAll(); updateGlobalActionsUI(); showSection('mps'); }
+
+  function saveGameData(){ try{ localStorage.setItem('produSIM_pcp2', JSON.stringify(gameData)); }catch(e){ console.warn(e); alert('Falha ao salvar.'); } }
+    function loadGameData(){ const s = localStorage.getItem('produSIM_pcp2'); if (s){ try{ gameData = JSON.parse(s); }catch{ } } }
+    function resetGameData(){ if (confirm('Limpar todos os dados do PCP2?')){ localStorage.removeItem('produSIM_pcp2'); gameData={ config:{}, demanda:{}, mps:{}, estoque:{}, mrp:{}, seq:{}, capacidade:{}, financeiro:{}, resultados:{} }; showSection('inicio'); updateGlobalActionsUI(); toast('Dados resetados.', 'info'); } }
+
+    function updateGlobalActionsUI(){
+      const btn = document.getElementById('btn-close-period'); if (!btn) return;
+      const concluida = !!gameData.config.concluida;
+      const p = gameData.config?.periodoAtual||PERIOD_START;
+      const ult = gameData.config?.ultimoFechado||0;
+      const disable = concluida || p>PERIOD_END || p<=ult;
+      btn.disabled = disable;
+      btn.title = disable? (concluida? 'Simulação concluída' : (p<=ult? 'Período já fechado' : 'Fora do horizonte')) : '';
+    }
+
+    function toast(msg, type='info'){
+      try{
+        const cont = document.getElementById('toast-container') || ( ()=>{ const c=document.createElement('div'); c.id='toast-container'; c.className='toast-container position-fixed top-0 end-0 p-3'; c.style.zIndex='1100'; document.body.appendChild(c); return c; })();
+        const t = document.createElement('div'); t.className = `toast align-items-center text-bg-${type} border-0`; t.innerHTML = `<div class="d-flex"><div class="toast-body">${msg}</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div>`; cont.appendChild(t); const bs = new bootstrap.Toast(t); bs.show(); t.addEventListener('hidden.bs.toast', ()=> t.remove());
+      }catch{ alert(msg); }
+    }
+
+    function generateFinalPDF(){ const { jsPDF } = window.jspdf; const doc = new jsPDF(); let y=15; doc.setFontSize(16); doc.text('Relatório Final – ProduSIM PCP2',105,y,{align:'center'}); y+=8; doc.setFontSize(11); doc.text(`Empresa: ${gameData.config.empresa}`,15,y); y+=6; doc.text(`Integrantes: ${gameData.config.integrantes?.join(', ')||''}`,15,y); y+=6; doc.text(`Períodos: ${PERIOD_START}–${PERIOD_END}`,15,y); y+=8; const addH=()=>{ doc.setFontSize(11); doc.text('Per  Hold  Setup  Prod  Back  Resultado  Acum',15,y); y+=5; }; addH(); for (let p=PERIOD_START;p<=PERIOD_END;p++){ const f=gameData.financeiro[p]||{}; const ln=`${String(p).padEnd(3)} ${Number(f.holding||0).toFixed(0).padStart(5)} ${Number(f.setup||0).toFixed(0).padStart(6)} ${Number(f.producao||0).toFixed(0).padStart(5)} ${Number(f.backlog||0).toFixed(0).padStart(5)} ${Number(f.resultado||0).toFixed(0).padStart(9)} ${Number(f.acumulado||0).toFixed(0).padStart(7)}`; if (y>280){ doc.addPage(); y=15; addH(); } doc.text(ln,15,y); y+=5; } if (y>260){ doc.addPage(); y=15; } doc.text('Desenvolvido por: LABINFO/FAEN/UFGD - 2025',15,y); doc.save(`Relatorio_Final_PCP2_${(gameData.config.empresa||'Empresa').replace(/\s+/g,'_')}.pdf`); toast('Relatório final exportado!', 'success'); }
+  </script>
+</body>
+</html>

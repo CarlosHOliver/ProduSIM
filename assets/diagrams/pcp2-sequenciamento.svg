@@ -1,0 +1,33 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='960' height='260' viewBox='0 0 960 260'>
+  <defs>
+    <style>
+      .axis{stroke:#6c757d;stroke-width:1}
+      .cap{stroke:#0d6efd;stroke-width:2;stroke-dasharray:6 4}
+      .job-ok{fill:#20c997}
+      .job-delay{fill:#dc3545}
+      .label{font:500 12px sans-serif;fill:#212529}
+      .title{font:600 14px sans-serif;fill:#0d6efd}
+    </style>
+  </defs>
+  <rect width='100%' height='100%' fill='#f8fbff'/>
+  <text class='title' x='20' y='24'>Sequenciamento no PCP2: ordens por horas, término e atraso</text>
+
+  <line class='axis' x1='40' y1='200' x2='900' y2='200'/>
+  <line class='cap' x1='600' y1='40' x2='600' y2='220'/>
+  <text class='label' x='600' y='235' text-anchor='middle'>Capacidade do período (horas)</text>
+
+  <rect class='job-ok' x='60' y='160' width='160' height='32' rx='6'/>
+  <text class='label' x='140' y='180' text-anchor='middle' fill='#fff'>Job 1</text>
+
+  <rect class='job-ok' x='230' y='160' width='200' height='32' rx='6'/>
+  <text class='label' x='330' y='180' text-anchor='middle' fill='#fff'>Job 2</text>
+
+  <rect class='job-delay' x='440' y='160' width='240' height='32' rx='6' opacity='0.9'/>
+  <text class='label' x='560' y='180' text-anchor='middle' fill='#fff'>Job 3 (fim → atraso)</text>
+
+  <rect class='job-delay' x='690' y='160' width='180' height='32' rx='6' opacity='0.9'/>
+  <text class='label' x='780' y='180' text-anchor='middle' fill='#fff'>Job 4 (atraso)</text>
+
+  <text class='label' x='40' y='90'>Regras: FCFS / SPT / EDD</text>
+  <text class='label' x='40' y='110'>Atraso = max(0, término - horas do período)</text>
+</svg>

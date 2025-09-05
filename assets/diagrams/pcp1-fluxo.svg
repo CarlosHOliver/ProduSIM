@@ -1,0 +1,51 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='960' height='220' viewBox='0 0 960 220'>
+  <defs>
+    <style>
+      .box{fill:#ffffff;stroke:#0d6efd;stroke-width:2;rx:10;ry:10}
+      .title{font:600 14px sans-serif;fill:#0d6efd}
+      .label{font:500 13px sans-serif;fill:#212529}
+      .arrow{stroke:#0d6efd;stroke-width:2;marker-end:url(#m)}
+    </style>
+    <marker id='m' markerWidth='10' markerHeight='10' refX='6' refY='3' orient='auto'>
+      <path d='M0,0 L0,6 L6,3 z' fill='#0d6efd'/>
+    </marker>
+  </defs>
+  <rect width='100%' height='100%' fill='#f8fbff'/>
+  
+  <g transform='translate(30,60)'>
+    <rect class='box' x='0' y='0' width='140' height='80'/>
+    <text class='title' x='70' y='28' text-anchor='middle'>Previsão</text>
+    <text class='label' x='70' y='50' text-anchor='middle'>Demanda</text>
+  </g>
+
+  <g transform='translate(200,60)'>
+    <rect class='box' x='0' y='0' width='160' height='80'/>
+    <text class='title' x='80' y='28' text-anchor='middle'>Produção</text>
+    <text class='label' x='80' y='50' text-anchor='middle'>Plano de Produção</text>
+  </g>
+
+  <g transform='translate(400,60)'>
+    <rect class='box' x='0' y='0' width='160' height='80'/>
+    <text class='title' x='80' y='28' text-anchor='middle'>Compras</text>
+    <text class='label' x='80' y='50' text-anchor='middle'>Insumos (BOM)</text>
+  </g>
+
+  <g transform='translate(600,60)'>
+    <rect class='box' x='0' y='0' width='160' height='80'/>
+    <text class='title' x='80' y='28' text-anchor='middle'>Capacidade</text>
+    <text class='label' x='80' y='50' text-anchor='middle'>Carga vs Horas</text>
+  </g>
+
+  <g transform='translate(800,60)'>
+    <rect class='box' x='0' y='0' width='140' height='80'/>
+    <text class='title' x='70' y='28' text-anchor='middle'>Financeiro</text>
+    <text class='label' x='70' y='50' text-anchor='middle'>Resultado</text>
+  </g>
+
+  <line class='arrow' x1='170' y1='100' x2='200' y2='100'/>
+  <line class='arrow' x1='360' y1='100' x2='400' y2='100'/>
+  <line class='arrow' x1='560' y1='100' x2='600' y2='100'/>
+  <line class='arrow' x1='760' y1='100' x2='800' y2='100'/>
+
+  <text class='label' x='30' y='24'>Fluxo simplificado do PCP1 (períodos 13–24)</text>
+</svg>
