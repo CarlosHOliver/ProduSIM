@@ -101,7 +101,17 @@
                         <input type="number" class="form-control" id="lote-foq" value="200">
                       </div>
                       <div class="col-md-4">
-                        <label class="form-label">Custos (Estoque/Setup/Produção/Backlog)</label>
+                        <label class="form-label">Custos Fixos (R$)</label>
+                        <input type="number" class="form-control" id="custos-fixos" value="1000">
+                        <small class="text-muted">Custo fixo por período</small>
+                      </div>
+                      <div class="col-md-4">
+                        <label class="form-label">Custo Armazenagem (R$/un)</label>
+                        <input type="number" class="form-control" id="custo-armazenagem" value="0.25" step="0.01">
+                        <small class="text-muted">Por unidade em estoque</small>
+                      </div>
+                      <div class="col-md-4">
+                        <label class="form-label">Custos Tradicionais (H;S;Cprod;Cback)</label>
                         <input type="text" class="form-control" id="custos" value="2;50;10;8">
                         <small class="text-muted">Formato: H;S;Cprod;Cback (por unidade/ordem)</small>
                       </div>
@@ -112,6 +122,11 @@
                       <div class="col-md-4">
                         <label class="form-label">Tempo de Processamento por Lote (h)</label>
                         <input type="number" class="form-control" id="tempo-lote" value="4">
+                      </div>
+                      <div class="col-md-4">
+                        <label class="form-label">Turnos Básicos (0-2 por processo)</label>
+                        <input type="number" class="form-control" id="turnos-basicos" value="1" min="0" max="2">
+                        <small class="text-muted">Turnos extras custam R$300 cada</small>
                       </div>
                       <div class="col-md-4">
                         <label class="form-label">Estoque Inicial (A;B;C)</label>
@@ -145,7 +160,7 @@
         <div class="mb-0">Desenvolvido por Carlos Henrique (LABINFO/FAEN/UFGD) - 2025</div>
       </div>
       <div class="text-end">
-        <div class="mb-0">Versão 1.0.0 - Módulo PCP2</div>
+        <div class="mb-0">Versão 1.2.0 - Módulo PCP2</div>
         <button type="button" class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#modalRegras"><i class="bi bi-info-circle"></i> Regras do Jogo</button>
       </div>
     </div>
@@ -161,24 +176,34 @@
         </div>
         <div class="modal-body">
           <h6>Objetivo</h6>
-          <p>Maximizar o <strong>Resultado Acumulado</strong> após 12 períodos, equilibrando atendimento da demanda, custos de <strong>estoque</strong>, <strong>setup</strong>, <strong>produção</strong> e <strong>backlog</strong>.</p>
+          <p>Maximizar o <strong>Resultado Acumulado</strong> após 12 períodos, equilibrando atendimento da demanda, custos de <strong>armazenagem</strong>, <strong>setup</strong>, <strong>produção</strong>, <strong>custos fixos</strong>, <strong>turnos extras</strong> e <strong>backlog</strong>.</p>
           <h6>Decisões do Aluno</h6>
           <ul>
-            <li><strong>MPS:</strong> Plano Mestre do Produto A ao longo do horizonte.</li>
+            <li><strong>MPS:</strong> Plano Mestre do Produto A ao longo do horizonte (influencia 70% da demanda real).</li>
             <li><strong>Política de lote:</strong> L4L ou FOQ (definir tamanho do lote quando FOQ).</li>
-            <li><strong>MRP:</strong> Ajustar SR e considerar os LTs para A/B/C (PAB, NR, PORc, PORl).</li>
+            <li><strong>MRP:</strong> Ajustar SR e considerar os LTs para A/B/C. Use a Calculadora BOM para sugestões.</li>
+            <li><strong>Capacidade:</strong> Ajustar número de turnos (1-2) por período - turnos extras custam R$300.</li>
             <li><strong>Sequenciamento:</strong> Escolher regra <em>FCFS</em>, <em>SPT</em> ou <em>EDD</em>.</li>
+          </ul>
+          <h6>Novos Recursos (v1.2.0)</h6>
+          <ul>
+            <li><strong>Sistema de Custos Harmonizado:</strong> Custos fixos R$1000 + armazenagem R$0,25/unidade.</li>
+            <li><strong>Calculadora BOM:</strong> Sugestões automáticas de compras B/C baseadas no MPS.</li>
+            <li><strong>Compras de Emergência:</strong> Sistema automático (+25% custo) para evitar faltas.</li>
+            <li><strong>Demanda Realística:</strong> 70% baseada na sua previsão + 30% demanda base.</li>
           </ul>
           <h6>Critérios de Avaliação</h6>
           <ul>
             <li>Maior <strong>Resultado Acumulado</strong> ao final.</li>
             <li>Desempate: maior <strong>Nível de Serviço</strong> e menor <strong>atraso médio</strong>.</li>
           </ul>
-          <h6>Dicas</h6>
+          <h6>Dicas Estratégicas</h6>
           <ul>
-            <li>Alinhe o MPS à capacidade disponível para evitar atrasos.</li>
-            <li>Considere os LTs ao liberar ordens (PORl) para garantir B/C.</li>
+            <li>Use a Calculadora BOM para otimizar compras de componentes.</li>
+            <li>Alinhe o MPS à capacidade disponível - use turnos extras quando necessário.</li>
+            <li>Sua previsão de demanda influencia 70% da demanda real - seja estratégico.</li>
             <li>L4L minimiza estoque; FOQ reduz setups — avalie o trade-off.</li>
+            <li>Monitor os custos de emergência - planeje compras antecipadamente.</li>
           </ul>
         </div>
         <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button></div>
@@ -189,7 +214,7 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     // Estado e constantes
-  let gameData = { config: {}, demanda: {}, mps: {}, estoque: {}, mrp: {}, seq: {}, capacidade: {}, financeiro: {}, resultados: {} };
+  let gameData = { config: {}, demanda: {}, mps: {}, estoque: {}, mrp: {}, seq: {}, capacidade: {}, financeiro: {}, resultados: {}, compras: {} };
   let viewPeriod = null; // seletor de visualização (MPS)
   let financeViewPeriod = null; // seletor de período no Financeiro
   let reportViewPeriod = null;  // seletor de período em Relatórios
@@ -250,19 +275,26 @@
       const ltB = Number(document.getElementById('lt-B')?.value||1);
       const ltC = Number(document.getElementById('lt-C')?.value||1);
       const pol = document.getElementById('lote-politica')?.value||'L4L';
-  const foq = Number(document.getElementById('lote-foq')?.value||200);
-  const [H,S,Cprod,Cback] = (document.getElementById('custos')?.value||'2;50;10;8').split(';').map(Number);
-  const capH = Number(document.getElementById('cap-horas')?.value||80);
-  const tempoLote = Number(document.getElementById('tempo-lote')?.value||4);
-  const [eA,eB,eC] = (document.getElementById('estoques-iniciais')?.value||'200;400;800').split(';').map(Number);
-  ITEMS.A.LT=ltA; ITEMS.B.LT=ltB; ITEMS.C.LT=ltC; ITEMS.A.H=H; ITEMS.A.S=S; ITEMS.A.Cprod=Cprod; ITEMS.A.Cback=Cback;
-      // Demanda base simples
-  const base = {}; for (let p=PERIOD_START; p<=PERIOD_END; p++){ base[p] = Math.round(400 + 50*Math.sin(p)); }
-  return { volatilidade: vol, politica: pol, foq, demandaBase: base, capHoras: capH, tempoLote, estIni: {A:eA,B:eB,C:eC} };
+      const foq = Number(document.getElementById('lote-foq')?.value||200);
+      const [H,S,Cprod,Cback] = (document.getElementById('custos')?.value||'2;50;10;8').split(';').map(Number);
+      const capH = Number(document.getElementById('cap-horas')?.value||80);
+      const tempoLote = Number(document.getElementById('tempo-lote')?.value||4);
+      const [eA,eB,eC] = (document.getElementById('estoques-iniciais')?.value||'200;400;800').split(';').map(Number);
+      // Novos custos harmonizados
+      const custosFixos = Number(document.getElementById('custos-fixos')?.value||1000);
+      const custoArmazenagem = Number(document.getElementById('custo-armazenagem')?.value||0.25);
+      const turnosBasicos = Number(document.getElementById('turnos-basicos')?.value||1);
+      ITEMS.A.LT=ltA; ITEMS.B.LT=ltB; ITEMS.C.LT=ltC; ITEMS.A.H=H; ITEMS.A.S=S; ITEMS.A.Cprod=Cprod; ITEMS.A.Cback=Cback;
+      // Demanda base com padrão realístico (70% previsão + 30% base)
+      const base = {}; for (let p=PERIOD_START; p<=PERIOD_END; p++){ base[p] = Math.round(300 + 40*Math.sin(p*0.5)); }
+      return { 
+        volatilidade: vol, politica: pol, foq, demandaBase: base, capHoras: capH, tempoLote, 
+        estIni: {A:eA,B:eB,C:eC}, custosFixos, custoArmazenagem, turnosBasicos
+      };
     }
 
     function initializeData(){
-      gameData.demanda = {}; gameData.mps = {}; gameData.estoque = {}; gameData.mrp = { A:{}, B:{}, C:{} }; gameData.seq = {}; gameData.capacidade={}; gameData.financeiro={}; gameData.resultados={};
+      gameData.demanda = {}; gameData.mps = {}; gameData.estoque = {}; gameData.mrp = { A:{}, B:{}, C:{} }; gameData.seq = {}; gameData.capacidade={}; gameData.financeiro={}; gameData.resultados={}; gameData.compras = {};
       for (let p=PERIOD_START; p<=PERIOD_END; p++){
         gameData.demanda[p] = { prevista: 0, real: 0 };
         gameData.mps[p] = { plano: 0 };
@@ -271,8 +303,13 @@
         gameData.mrp.B[p] = { GR:0, SR:0, PAB:0, NR:0, PORc:0, PORl:0 };
         gameData.mrp.C[p] = { GR:0, SR:0, PAB:0, NR:0, PORc:0, PORl:0 };
         gameData.seq[p] = { regra: 'FCFS', ordens: [] };
-        gameData.capacidade[p] = { disponivelH: gameData.config.cenario.capHoras, necessariaH: 0 };
-        gameData.financeiro[p] = { holding:0, setup:0, producao:0, backlog:0, resultado:0, acumulado:0 };
+        gameData.capacidade[p] = { 
+          disponivelH: gameData.config.cenario.capHoras * (gameData.config.cenario.turnosBasicos || 1), 
+          necessariaH: 0,
+          turnos: gameData.config.cenario.turnosBasicos || 1
+        };
+        gameData.financeiro[p] = { holding:0, setup:0, producao:0, backlog:0, fixos:0, turnos:0, resultado:0, acumulado:0 };
+        gameData.compras[p] = { emergenciaB: 0, emergenciaC: 0, custoEmergencia: 0 };
       }
     }
 
@@ -321,6 +358,11 @@
     function renderMRP(){
       const el = document.getElementById('tela-mrp'); if (!el) return;
       computeMRP();
+      
+      // Calculadora BOM básica
+      const pAtual = gameData.config?.periodoAtual || PERIOD_START;
+      const bomSuggestions = calculateBOMSuggestions(pAtual);
+      
       const tableFor = (item)=>{
         const inputsSR = [];
         const body = [];
@@ -344,8 +386,45 @@
             </div>
           </div>`;
       };
-      el.innerHTML = `<div class="simulation-container"><h5 class="mb-3"><i class="bi bi-diagram-3 text-primary me-2"></i>MRP</h5><div class="row g-3">${['A','B','C'].map(tableFor).join('')}</div></div>`;
+      
+      const bomCalculatorHTML = `
+        <div class="col-12 mb-3">
+          <div class="card border-success">
+            <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+              <span><i class="bi bi-calculator me-2"></i>Calculadora BOM - Período ${pAtual}</span>
+              <button class="btn btn-light btn-sm" id="btn-apply-bom" type="button">Aplicar Sugestões</button>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="small text-muted mb-2">Baseado no MPS do período ${pAtual}:</div>
+                  <ul class="small mb-2">
+                    <li>Produto A planejado: <strong>${bomSuggestions.planoA}</strong> unidades</li>
+                    <li>Necessário B: <strong>${bomSuggestions.needB}</strong> unidades (${bomSuggestions.planoA} × 1)</li>
+                    <li>Necessário C: <strong>${bomSuggestions.needC}</strong> unidades (${bomSuggestions.planoA} × 2)</li>
+                  </ul>
+                </div>
+                <div class="col-md-6">
+                  <div class="small text-muted mb-2">Sugestões de Recebimento Agendado:</div>
+                  <ul class="small mb-0">
+                    <li>Comprar B no período ${Math.max(PERIOD_START, pAtual - ITEMS.B.LT)}: <strong>${bomSuggestions.buyB}</strong></li>
+                    <li>Comprar C no período ${Math.max(PERIOD_START, pAtual - ITEMS.C.LT)}: <strong>${bomSuggestions.buyC}</strong></li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>`;
+      
+      el.innerHTML = `<div class="simulation-container"><h5 class="mb-3"><i class="bi bi-diagram-3 text-primary me-2"></i>MRP</h5><div class="row g-3">${bomCalculatorHTML}${['A','B','C'].map(tableFor).join('')}</div></div>`;
+      
       el.querySelectorAll('.inp-sr').forEach(inp=> inp.addEventListener('change',(e)=>{ const it=e.target.dataset.item; const t=Number(e.target.dataset.t); gameData.mrp[it][t].SR=Number(e.target.value)||0; saveGameData(); renderMRP(); }));
+      
+      document.getElementById('btn-apply-bom')?.addEventListener('click', ()=>{
+        applyBOMSuggestions(bomSuggestions);
+        toast('Sugestões BOM aplicadas!', 'success');
+        renderMRP();
+      });
     }
 
   function lotSize(q){ const pol = gameData.config.cenario.politica; if (pol==='L4L') return q; const foq = gameData.config.cenario.foq; if (q<=0) return 0; return Math.ceil(q/foq)*foq; }
@@ -441,14 +520,53 @@
       const p = gameData.config?.periodoAtual||PERIOD_START; const el = document.getElementById('tela-capacidade'); if (!el) return;
       // Garante que as ordens do período foram construídas (sem tocar UI)
       computeSequenciamentoForPeriod(p);
-      const horasDisp = gameData.capacidade[p].disponivelH;
+      const horasBase = gameData.config.cenario.capHoras;
+      const turnosAtivos = gameData.capacidade[p].turnos;
+      const horasDisp = horasBase * turnosAtivos;
       const horasNec = (gameData.seq[p].ordens||[]).reduce((s,j)=> s + j.procH, 0);
+      gameData.capacidade[p].disponivelH = horasDisp;
       gameData.capacidade[p].necessariaH = horasNec;
       const util = horasDisp>0? Math.round(Math.min(100, (horasNec/horasDisp)*100)):0;
-      el.innerHTML = `<div class="simulation-container"><h5 class="mb-3"><i class="bi bi-building text-primary me-2"></i>Capacidade – Período ${p}</h5>
-        <div class="result-panel"><div class="d-flex justify-content-between"><span>Necessária (h)</span><strong>${horasNec}</strong></div>
-        <div class="d-flex justify-content-between"><span>Disponível (h)</span><strong>${horasDisp}</strong></div>
-        <div class="progress mt-2"><div class="progress-bar ${util>100?'bg-danger':''}" style="width:${Math.min(util,100)}%">${util}%</div></div></div></div>`;
+      
+      el.innerHTML = `<div class="simulation-container">
+        <h5 class="mb-3"><i class="bi bi-building text-primary me-2"></i>Capacidade – Período ${p}</h5>
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <div class="card">
+              <div class="card-header">Gestão de Turnos</div>
+              <div class="card-body">
+                <div class="mb-2">
+                  <label class="form-label small">Número de Turnos (1-2)</label>
+                  <select id="sel-turnos" class="form-select form-select-sm">
+                    <option value="1" ${turnosAtivos===1?'selected':''}>1 turno (${horasBase}h)</option>
+                    <option value="2" ${turnosAtivos===2?'selected':''}>2 turnos (${horasBase*2}h) - +R$300</option>
+                  </select>
+                </div>
+                <div class="small text-muted">
+                  Custo extra por turno adicional: R$300<br>
+                  Turno atual: ${turnosAtivos} (${horasDisp}h disponíveis)
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="result-panel">
+              <div class="d-flex justify-content-between"><span>Necessária (h)</span><strong>${horasNec}</strong></div>
+              <div class="d-flex justify-content-between"><span>Disponível (h)</span><strong>${horasDisp}</strong></div>
+              <div class="progress mt-2"><div class="progress-bar ${util>100?'bg-danger':''}" style="width:${Math.min(util,100)}%">${util}%</div></div>
+            </div>
+          </div>
+        </div>
+      </div>`;
+      
+      document.getElementById('sel-turnos')?.addEventListener('change', (e)=>{
+        const novosTurnos = Number(e.target.value);
+        gameData.capacidade[p].turnos = novosTurnos;
+        saveGameData();
+        renderCapacidade();
+        renderFinanceiro();
+        toast(`Capacidade ajustada para ${novosTurnos} turno${novosTurnos>1?'s':''}`, 'success');
+      });
     }
 
     function renderFinanceiro(){
@@ -468,33 +586,62 @@
             ${p!==pAtual? `<span class="badge text-bg-light">Atual: ${pAtual}</span>`:''}
           </div>
         </div>
-        <div class="row g-3">${[['Custo de Estoque',-f.holding],['Setup',-f.setup],['Produção',-f.producao],['Backlog',-f.backlog],['Resultado',f.resultado]].map(([k,v])=>`<div class='col-md-4'><div class='result-panel'><div class='text-muted small'>${k}</div><div class='fs-5'>R$ ${Number(v||0).toFixed(2)}</div></div></div>`).join('')}</div>
+        <div class="row g-3">
+          ${[
+            ['Custos Fixos',-f.fixos],
+            ['Custo de Estoque',-f.holding],
+            ['Setup',-f.setup],
+            ['Produção',-f.producao],
+            ['Turnos Extras',-f.turnos],
+            ['Compras Emergência',-f.emergencia],
+            ['Backlog',-f.backlog],
+            ['Resultado',f.resultado]
+          ].map(([k,v])=>`<div class='col-md-4'><div class='result-panel'><div class='text-muted small'>${k}</div><div class='fs-6'>R$ ${Number(v||0).toFixed(2)}</div></div></div>`).join('')}
+        </div>
         <div class="result-panel"><div class="d-flex justify-content-between"><span>Acumulado</span><strong>R$ ${Number(f.acumulado||0).toFixed(2)}</strong></div></div></div>`;
       document.getElementById('sel-fin-p')?.addEventListener('change',(e)=>{ financeViewPeriod = Number(e.target.value)||pEnd; renderFinanceiro(); });
     }
 
     function computeFinance(p){
-      // custos: holding sobre PAB de A,B,C; setup por ordem (seq); produção por unidade produzida A (ou ordens do sequenciamento se PORc=0); backlog por falta de A
-  const H = ITEMS.A.H, S = ITEMS.A.S, Cprod = ITEMS.A.Cprod, Cback = ITEMS.A.Cback;
-  const estFinA = Number(gameData.mrp.A[p].PAB||0), estFinB = Number(gameData.mrp.B[p].PAB||0), estFinC = Number(gameData.mrp.C[p].PAB||0);
-  const ordens = gameData.seq[p].ordens||[];
-  const horasPeriodo = Number(gameData.config.cenario.capHoras||0);
-  // Quantidade produzida considerada no período: apenas ordens concluídas dentro da capacidade
-  let clock=0, setupsEfetivos=0, prodConcluida=0;
-  for (const j of ordens){ const end=clock + j.procH; if (end<=horasPeriodo){ prodConcluida += Number(j.qtde||0); setupsEfetivos++; } clock=end; }
-  const setups = setupsEfetivos;
-  const prod = prodConcluida;
+      // Sistema financeiro harmonizado com PCP1 (versão simplificada)
+      const custosFixos = gameData.config.cenario.custosFixos || 1000;
+      const custoArmazenagem = gameData.config.cenario.custoArmazenagem || 0.25;
+      const custoTurnoExtra = 300; // R$300 por turno extra
+      
+      // Custos tradicionais para compatibilidade
+      const H = ITEMS.A.H, S = ITEMS.A.S, Cprod = ITEMS.A.Cprod, Cback = ITEMS.A.Cback;
+      const estFinA = Number(gameData.mrp.A[p].PAB||0), estFinB = Number(gameData.mrp.B[p].PAB||0), estFinC = Number(gameData.mrp.C[p].PAB||0);
+      const ordens = gameData.seq[p].ordens||[];
+      const horasPeriodo = Number(gameData.capacidade[p].disponivelH||0);
+      
+      // Quantidade produzida considerada no período: apenas ordens concluídas dentro da capacidade
+      let clock=0, setupsEfetivos=0, prodConcluida=0;
+      for (const j of ordens){ const end=clock + j.procH; if (end<=horasPeriodo){ prodConcluida += Number(j.qtde||0); setupsEfetivos++; } clock=end; }
+      const setups = setupsEfetivos;
+      const prod = prodConcluida;
+      
       const demanda = Number(gameData.demanda[p].real || gameData.demanda[p].prevista || 0);
-  const disponibilA = Number((p===PERIOD_START? gameData.estoque[p].A: gameData.mrp.A[p-1].PAB)||0) + prod;
-  const atendido = Math.min(demanda, disponibilA);
-  const backlog = Math.max(0, demanda - atendido);
-  const holding = (estFinA + estFinB + estFinC) * H;
-  const setup = setups * S;
-  const producao = prod * Cprod;
-  const backc = backlog * Cback;
-  const resultado = - (holding + setup + producao + backc);
-  const acum = (gameData.financeiro[p-1]?.acumulado||0) + resultado;
-  gameData.financeiro[p] = { holding, setup, producao, backlog: backc, resultado, acumulado: acum };
+      const disponibilA = Number((p===PERIOD_START? gameData.estoque[p].A: gameData.mrp.A[p-1].PAB)||0) + prod;
+      const atendido = Math.min(demanda, disponibilA);
+      const backlog = Math.max(0, demanda - atendido);
+      
+      // Custos harmonizados
+      const holding = (estFinA + estFinB + estFinC) * custoArmazenagem;
+      const setup = setups * S;
+      const producao = prod * Cprod;
+      const backc = backlog * Cback;
+      const fixos = custosFixos;
+      
+      // Custos de turnos extras
+      const turnosAtivos = gameData.capacidade[p].turnos || 1;
+      const turnos = (turnosAtivos - 1) * custoTurnoExtra;
+      
+      // Compras de emergência
+      const emergencia = gameData.compras[p].custoEmergencia || 0;
+      
+      const resultado = - (holding + setup + producao + backc + fixos + turnos + emergencia);
+      const acum = (gameData.financeiro[p-1]?.acumulado||0) + resultado;
+      gameData.financeiro[p] = { holding, setup, producao, backlog: backc, fixos, turnos, emergencia, resultado, acumulado: acum };
     }
 
     function recomputeFinanceUpTo(pEnd){
@@ -528,7 +675,16 @@
         ${!concluida ? '<div class="alert alert-warning">O relatório final estará disponível ao término do período. Abaixo um resumo parcial.</div>' : ''}
         <div class="row g-3">
           <div class="col-md-6"><div class="result-panel"><div class="fw-bold mb-2">Resumo Financeiro (${concluida? 'Total Simulação': 'Até Período '+pEnd})</div>
-            <ul class="mb-0"><li>Custos de Estoque: R$ ${totals.holding.toFixed(2)}</li><li>Setups: R$ ${totals.setup.toFixed(2)}</li><li>Produção: R$ ${totals.producao.toFixed(2)}</li><li>Backlog: R$ ${totals.backlog.toFixed(2)}</li><li>Resultado acumulado: R$ ${totals.acumulado.toFixed(2)}</li></ul>
+            <ul class="mb-0">
+              <li>Custos Fixos: R$ ${(totals.fixos||0).toFixed(2)}</li>
+              <li>Custos de Armazenagem: R$ ${(totals.holding||0).toFixed(2)}</li>
+              <li>Setups: R$ ${(totals.setup||0).toFixed(2)}</li>
+              <li>Produção: R$ ${(totals.producao||0).toFixed(2)}</li>
+              <li>Turnos Extras: R$ ${(totals.turnos||0).toFixed(2)}</li>
+              <li>Compras Emergência: R$ ${(totals.emergencia||0).toFixed(2)}</li>
+              <li>Backlog: R$ ${(totals.backlog||0).toFixed(2)}</li>
+              <li><strong>Resultado acumulado: R$ ${(totals.acumulado||0).toFixed(2)}</strong></li>
+            </ul>
           </div></div>
           <div class="col-md-6"><div class="result-panel">
             <div class="d-flex justify-content-between align-items-center">
@@ -549,7 +705,18 @@
     }
 
     function renderReportPeriodDetailHTML(p, fin){
-      return `<ul class="mb-0"><li>Período: ${p}</li><li>Holding: R$ ${Number(fin.holding||0).toFixed(2)}</li><li>Setups: R$ ${Number(fin.setup||0).toFixed(2)}</li><li>Produção: R$ ${Number(fin.producao||0).toFixed(2)}</li><li>Backlog: R$ ${Number(fin.backlog||0).toFixed(2)}</li><li>Resultado: R$ ${Number(fin.resultado||0).toFixed(2)}</li><li>Acumulado: R$ ${Number(fin.acumulado||0).toFixed(2)}</li></ul>`;
+      return `<ul class="mb-0">
+        <li>Período: ${p}</li>
+        <li>Fixos: R$ ${Number(fin.fixos||0).toFixed(2)}</li>
+        <li>Armazenagem: R$ ${Number(fin.holding||0).toFixed(2)}</li>
+        <li>Setups: R$ ${Number(fin.setup||0).toFixed(2)}</li>
+        <li>Produção: R$ ${Number(fin.producao||0).toFixed(2)}</li>
+        <li>Turnos Extras: R$ ${Number(fin.turnos||0).toFixed(2)}</li>
+        <li>Compras Emergência: R$ ${Number(fin.emergencia||0).toFixed(2)}</li>
+        <li>Backlog: R$ ${Number(fin.backlog||0).toFixed(2)}</li>
+        <li><strong>Resultado: R$ ${Number(fin.resultado||0).toFixed(2)}</strong></li>
+        <li><strong>Acumulado: R$ ${Number(fin.acumulado||0).toFixed(2)}</strong></li>
+      </ul>`;
     }
 
     function closePeriod(){
@@ -557,9 +724,29 @@
       if (gameData.config.concluida){ toast('Simulação concluída.', 'info'); updateGlobalActionsUI(); return; }
       if ((gameData.config.ultimoFechado||0) >= PERIOD_END){ toast('Simulação concluída.', 'info'); gameData.config.concluida = true; updateGlobalActionsUI(); return; }
       if (p <= (gameData.config.ultimoFechado||0)){ toast('Período já fechado.', 'warning'); updateGlobalActionsUI(); return; }
-      // Demanda real com ruído
-      const base = gameData.config.cenario.demandaBase[p]; const vol = gameData.config.cenario.volatilidade; const noise = (Math.random()*2-1)*vol; const real = Math.max(0, Math.round(base*(1+noise)));
-      gameData.demanda[p].real = real;
+      
+      // Demanda real harmonizada (70% previsão + 30% base)
+      const demandaPrevista = Number(gameData.demanda[p].prevista || 0);
+      const demandaBase = gameData.config.cenario.demandaBase[p] || 0;
+      const vol = gameData.config.cenario.volatilidade || 0.1;
+      
+      let demandaReal;
+      if (demandaPrevista > 0) {
+        // 70% baseado na previsão do aluno, 30% na demanda base
+        const demandaMista = demandaPrevista * 0.7 + demandaBase * 0.3;
+        const noise = (Math.random()*2-1) * vol;
+        demandaReal = Math.max(0, Math.round(demandaMista * (1 + noise)));
+      } else {
+        // Se não há previsão, usa apenas base com ruído
+        const noise = (Math.random()*2-1) * vol;
+        demandaReal = Math.max(0, Math.round(demandaBase * (1 + noise)));
+      }
+      
+      gameData.demanda[p].real = demandaReal;
+      
+      // Compras de emergência para B e C se necessário
+      processEmergencyPurchases(p);
+      
       // Recalcula MRP e transfere estoques (PAB) para próximo período
       computeMRP();
       if (p<PERIOD_END){
@@ -575,7 +762,7 @@
       // Reset seleção para mostrar o último período fechado automaticamente
       financeViewPeriod = null; reportViewPeriod = gameData.config.ultimoFechado;
       saveGameData(); updateAll(); updateGlobalActionsUI();
-      toast('Período fechado!', 'success');
+      toast(`Período fechado! Demanda real: ${demandaReal}`, 'success');
     }
 
   function changePeriod(d){ const p = gameData.config?.periodoAtual||PERIOD_START; const n = Math.max(PERIOD_START, Math.min(PERIOD_END, p+d)); gameData.config.periodoAtual = n; saveGameData(); updateAll(); updateGlobalActionsUI(); showSection('mps'); }
@@ -598,9 +785,10 @@
       const pnl = document.getElementById('painel-cenario'); if (pnl){ try{ new bootstrap.Collapse(pnl, {toggle:false}).hide(); }catch{} }
       // Restaura valores padrão do cenário (opcional)
       const setVal=(id,val)=>{ const el=document.getElementById(id); if(el) el.value=val; };
-      setVal('cen-vol','15'); setVal('lt-A','1'); setVal('lt-B','1'); setVal('lt-C','1');
+      setVal('cen-vol','10'); setVal('lt-A','1'); setVal('lt-B','1'); setVal('lt-C','1');
       setVal('lote-politica','L4L'); setVal('lote-foq','200'); setVal('custos','2;50;10;8');
       setVal('cap-horas','80'); setVal('tempo-lote','4'); setVal('estoques-iniciais','200;400;800');
+      setVal('custos-fixos','1000'); setVal('custo-armazenagem','0.25'); setVal('turnos-basicos','1');
       // Volta para a tela inicial imediatamente
       showSection('inicio'); updateGlobalActionsUI();
       // Feedback e recarrega para garantir UI limpa sem necessidade de Ctrl+F5
@@ -628,6 +816,62 @@
     }
 
     function generateFinalPDF(){ const { jsPDF } = window.jspdf; const doc = new jsPDF(); let y=15; doc.setFontSize(16); doc.text('Relatório Final – ProduSIM PCP2',105,y,{align:'center'}); y+=8; doc.setFontSize(11); doc.text(`Empresa: ${gameData.config.empresa}`,15,y); y+=6; doc.text(`Integrantes: ${gameData.config.integrantes?.join(', ')||''}`,15,y); y+=6; doc.text(`Períodos: ${PERIOD_START}–${PERIOD_END}`,15,y); y+=8; const addH=()=>{ doc.setFontSize(11); doc.text('Per  Hold  Setup  Prod  Back  Resultado  Acum',15,y); y+=5; }; addH(); for (let p=PERIOD_START;p<=PERIOD_END;p++){ const f=gameData.financeiro[p]||{}; const ln=`${String(p).padEnd(3)} ${Number(f.holding||0).toFixed(0).padStart(5)} ${Number(f.setup||0).toFixed(0).padStart(6)} ${Number(f.producao||0).toFixed(0).padStart(5)} ${Number(f.backlog||0).toFixed(0).padStart(5)} ${Number(f.resultado||0).toFixed(0).padStart(9)} ${Number(f.acumulado||0).toFixed(0).padStart(7)}`; if (y>280){ doc.addPage(); y=15; addH(); } doc.text(ln,15,y); y+=5; } if (y>260){ doc.addPage(); y=15; } doc.text('Desenvolvido por: LABINFO/FAEN/UFGD - 2025',15,y); doc.save(`Relatorio_Final_PCP2_${(gameData.config.empresa||'Empresa').replace(/\s+/g,'_')}.pdf`); toast('Relatório final exportado!', 'success'); }
+
+    // Funções auxiliares para harmonização com PCP1
+    function calculateBOMSuggestions(periodo) {
+      const planoA = Number(gameData.mps[periodo]?.plano || 0);
+      const needB = planoA * (BOM.A.B || 1);
+      const needC = planoA * (BOM.A.C || 2);
+      
+      // Considera lead times para sugerir quando comprar
+      const buyPeriodB = Math.max(PERIOD_START, periodo - ITEMS.B.LT);
+      const buyPeriodC = Math.max(PERIOD_START, periodo - ITEMS.C.LT);
+      
+      return {
+        planoA,
+        needB,
+        needC,
+        buyB: needB,
+        buyC: needC,
+        buyPeriodB,
+        buyPeriodC
+      };
+    }
+    
+    function applyBOMSuggestions(suggestions) {
+      // Aplica as sugestões nos campos SR
+      gameData.mrp.B[suggestions.buyPeriodB].SR = Number(gameData.mrp.B[suggestions.buyPeriodB].SR || 0) + suggestions.buyB;
+      gameData.mrp.C[suggestions.buyPeriodC].SR = Number(gameData.mrp.C[suggestions.buyPeriodC].SR || 0) + suggestions.buyC;
+      saveGameData();
+    }
+    
+    function processEmergencyPurchases(periodo) {
+      // Compras de emergência simplificadas para B e C
+      const custoEmergenciaRate = 1.25; // +25% vs +50% no PCP1
+      let custoTotal = 0;
+      
+      // Verifica se há falta de B
+      const faltaB = Math.max(0, -Number(gameData.mrp.B[periodo].PAB || 0));
+      if (faltaB > 0) {
+        gameData.compras[periodo].emergenciaB = faltaB;
+        gameData.mrp.B[periodo].PAB += faltaB;
+        custoTotal += faltaB * 5 * custoEmergenciaRate; // custo base B = R$5
+      }
+      
+      // Verifica se há falta de C  
+      const faltaC = Math.max(0, -Number(gameData.mrp.C[periodo].PAB || 0));
+      if (faltaC > 0) {
+        gameData.compras[periodo].emergenciaC = faltaC;
+        gameData.mrp.C[periodo].PAB += faltaC;
+        custoTotal += faltaC * 3 * custoEmergenciaRate; // custo base C = R$3
+      }
+      
+      gameData.compras[periodo].custoEmergencia = custoTotal;
+      
+      if (faltaB > 0 || faltaC > 0) {
+        console.log(`Período ${periodo}: Compras de emergência - B: ${faltaB}, C: ${faltaC}, Custo: R$${custoTotal.toFixed(2)}`);
+      }
+    }
   </script>
 </body>
 </html>

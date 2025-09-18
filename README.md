@@ -1,13 +1,17 @@
 # ProduSIM – Simulação de PCP
 
-ProduSIM é um jogo de simulação de Planejamento e Controle da Produção (PCP) para uso educacional. Nele, os times tomam decisões por período (13 a 24) nas áreas de Demanda, Produção, Compras, Capacidade e Financeiro, acompanhando resultados e indicadores até o relatório final consolidado em PDF.
+ProduSIM é um jogo de simulação de Planejamento e Controle da Produção (PCP) para uso educacional. O sistema inclui dois módulos sequenciais:
 
-Este repositório contém uma versão web (HTML/CSS/JS) que roda diretamente no navegador, com persistência local via `localStorage`.
+- **PCP2 (v1.2.0)**: Períodos 1-12 - MPS/MRP, Sequenciamento e Capacidade Básica
+- **PCP1 (v1.3.0)**: Períodos 13-24 - Sistema avançado com recursos completos
+
+A progressão educacional é projetada para que os estudantes aprendam conceitos básicos no PCP2 e depois avancem para funcionalidades mais complexas no PCP1.
 
 ## Como começar
 
-- Abra `index.html` no navegador para acessar a landing page e iniciar o módulo.
-- Ou acesse diretamente o módulo: `modulos/pcp1.html`.
+- Abra `index.html` no navegador para acessar a landing page.
+- Para educação sequencial: inicie pelo PCP2, depois PCP1.
+- Acesso direto: `modulos/pcp1.html` ou `modulos/pcp2.html`.
 
 Opcional: sirva como site estático (recomendado para evitar restrições de algumas extensões do navegador ao ler arquivos locais).
 
@@ -19,32 +23,48 @@ python3 -m http.server 8080
 # Depois visite http://localhost:8080
 ```
 
-## Regras do Jogo (resumo)
+## Regras do Jogo
 
-Objetivo
-- Maximizar o Resultado Acumulado (lucro total) ao final do período 24.
-- Manter Nível de Serviço elevado (mínimo recomendado: 90%).
+### PCP2 (Módulo Introdutório - v1.2.0)
+**Objetivo**: Maximizar o Resultado Acumulado após 12 períodos (1-12).
 
-Como jogar
-- Previsão: use a Demanda Base como referência e ajuste pelo histórico. **Sua previsão influencia a demanda real (70% previsão + 30% base histórica)**.
-- Produção: planeje dentro da capacidade para minimizar terceirização.
-- Compras: calcule insumos pelo BOM e o plano de produção; evite estoques excessivos. **Caso haja falta de material, compras de emergência são realizadas automaticamente com custo premium (+50%)**.
-- Serviço: busque atender a demanda minimizando perdas de venda e custo de estoque.
-- Fechamento: feche o período e avalie o Financeiro; ajuste a estratégia no período seguinte.
+**Funcionalidades**:
+- Sistema de custos harmonizado (custos fixos R$1000 + armazenagem R$0,25/unidade)
+- Calculadora BOM com sugestões inteligentes de compras
+- Capacidade ajustável (1-2 turnos por período, turnos extras custam R$300)
+- Compras de emergência automáticas (+25% custo)
+- Demanda realística (70% baseada na previsão do aluno + 30% demanda base)
 
-Critério de vitória
-- Vence quem tiver maior Resultado Acumulado no período 24.
-- Desempate pelo maior Nível de Serviço acumulado.
+**Decisões**:
+- Plano Mestre de Produção (MPS) - sua previsão influencia 70% da demanda real
+- Política de lotes (L4L ou FOQ)
+- Recebimentos Agendados (SR) com apoio da calculadora BOM
+- Número de turnos por período
+- Regras de sequenciamento (FCFS, SPT, EDD)
 
-Dicas
-- Evite perdas de venda e terceirização para preservar margens.
-- Estoques altos custam; estoques baixos podem causar perdas e compras de emergência caras.
-- Planeje compras adequadamente: falta de material resulta em aquisição automática com custo premium.
-- **Previsões precisas são essenciais**: previsões ruins resultam em demanda inesperada e custos extras.
-- **Gerencie a capacidade estrategicamente**: ajuste turnos conforme necessário - turnos extras custam R$ 500 mas podem ser mais baratos que terceirização.
-- Use a calculadora BOM para otimizar compras e evitar desperdícios.
-- Monitore o erro de previsão em cada período para melhorar a acurácia.
-- Use gráficos e relatórios para ajustar mix e plano por período.
+### PCP1 (Módulo Avançado - v1.3.0)  
+**Objetivo**: Maximizar o Resultado Acumulado após 12 períodos (13-24).
+
+**Funcionalidades Avançadas**:
+- Todos os recursos do PCP2 em versão completa
+- Capacidade dinâmica (0-3 turnos por processo, turnos extras custam R$500)
+- Compras de emergência com custo premium (+50%)
+- Calculadora BOM avançada com análise de trade-offs
+- Sistema financeiro completo com análise detalhada
+- Logs de depuração e feedback em tempo real
+
+**Decisões Adicionais**:
+- Gestão de múltiplos processos produtivos
+- Estratégias complexas de compras e estoque
+- Análise avançada de capacidade e gargalos
+
+### Dicas Estratégicas Gerais
+- **Previsões precisas são essenciais**: previsões ruins resultam em demanda inesperada e custos extras
+- **Use as calculadoras BOM**: otimizam compras e evitam desperdícios  
+- **Gerencie capacidade estrategicamente**: turnos extras podem ser mais baratos que perdas de venda
+- **Monitore custos de emergência**: planejar compras antecipadamente evita custos premium
+- **Analise trade-offs**: L4L minimiza estoque, FOQ reduz setups
+- **Progression natural**: aprenda no PCP2, domine no PCP1
 
 As regras também estão disponíveis dentro do jogo:
 - Na landing page (`index.html`) na seção “Regras do Jogo”.
@@ -92,34 +112,28 @@ As regras também estão disponíveis dentro do jogo:
 
 ## Changelog
 
-### v1.2.0 (2024)
-- ✅ **Correção crítica**: Sistema de compras de emergência agora incorpora materiais ao estoque
-- ✅ **Nova funcionalidade**: Demanda realística influenciada pelas previsões do usuário (70/30)
-- ✅ **Acompanhamento educacional**: Cálculo e exibição do erro de previsão (MAPE)
-- ✅ **Melhorias na interface**: Alertas visuais para compras de emergência e erros de previsão
-
-### v1.1.0 (anterior)
-- Sistema base de simulação PCP
-- Módulos PCP1 e PCP2 implementados
-- Sistema de relatórios e exportação PDF
-- Painéis de KPI adicionais e auditoria por período (modo instrutor).
-
-## Créditos e atribuição
-
-- Autor: Carlos Henrique (LABINFO/FAEN/UFGD) – 2025
-- Baseado no jogo LSSP_PCP (UFSC) – adaptação para a web.
-
-## Changelog
-
-### v1.3.0 (2024-09-18)
-- ✅ **Nova funcionalidade**: Gestão dinâmica de capacidade com ajuste de turnos por período
+### v1.3.0 (2024-09-18) - PCP1 Avançado
+- ✅ **Nova funcionalidade**: Gestão dinâmica de capacidade com ajuste de turnos por período (0-3 turnos)
 - ✅ **Interface aprimorada**: Calculadora BOM inteligente com sugestões automáticas de compra
 - ✅ **Sistema de custos**: Turnos extras custam R$ 500 cada, separados no relatório financeiro
 - ✅ **Análise estratégica**: Trade-off entre custos de turnos extras vs terceirização
 - ✅ **Feedback visual**: Barras de utilização com alertas de sobrecarga e folgas
+- ✅ **Documentação**: Manual técnico completo e relatórios PDF aprimorados
 
-### v1.2.0 (2024)
-- ✅ **Correção crítica**: Sistema de compras de emergência agora incorpora materiais ao estoque
+### v1.2.0 (2024-09-18) - PCP2 Harmonizado  
+- ✅ **Consistência educacional**: PCP2 atualizado para manter continuidade com PCP1
+- ✅ **Sistema de custos harmonizado**: Custos fixos R$1000 + armazenagem R$0,25/unidade
+- ✅ **Calculadora BOM básica**: Sugestões simples para compras de componentes B/C
+- ✅ **Capacidade ajustável**: 1-2 turnos por período (turnos extras custam R$300)
+- ✅ **Compras de emergência**: Sistema automático com custo premium +25%
+- ✅ **Demanda realística**: 70% previsão + 30% base histórica (volatilidade reduzida para 10%)
+- ✅ **Interface aprimorada**: Feedback detalhado e regras atualizadas
+
+### v1.1.0 (anterior)
+- Sistema base de simulação PCP
+- Módulos PCP1 e PCP2 implementados  
+- Sistema de relatórios e exportação PDF
+- Painéis de KPI adicionais e auditoria por período (modo instrutor)
 - ✅ **Nova funcionalidade**: Demanda realística influenciada pelas previsões do usuário (70/30)
 - ✅ **Acompanhamento educacional**: Cálculo e exibição do erro de previsão (MAPE)
 - ✅ **Melhorias na interface**: Alertas visuais para compras de emergência e erros de previsão
