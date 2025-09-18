@@ -339,7 +339,7 @@
             maxim:   { tecelagem: 1.0, purgaTinturaria: 1.2, fixacaoAcabamento: 0.9 }
         };
         const DEFAULT_PRICES = { colmeia: 20, piquet: 28, maxim: 35 };
-    const DEFAULT_COSTS = { custoEstoque: 2, penalidadePerda: 5, custosFixos: 5000, custoTerceirizacao: 3 };
+    const DEFAULT_COSTS = { custoEstoque: 0.5, penalidadePerda: 5, custosFixos: 2000, custoTerceirizacao: 3 };
 
     // Estado de visualização (seletores de período)
     let financeViewPeriod = null; // período selecionado na aba Financeiro
@@ -721,8 +721,44 @@
             doc.setFontSize(12); doc.text('Indicadores', margin, y); y += 6; doc.setFontSize(11);
             const ns = (computeServiceLevelTill(pEnd)*100).toFixed(1);
             doc.text(`Nível de serviço: ${ns}%`, margin, y); y += 6;
+            
+            // Calcular erro médio de previsão
+            let totalErros = 0, countErros = 0;
+            for (let p=13; p<=pEnd; p++) {
+                PRODUCTS.forEach(k => {
+                    const erro = gameData.demanda[p]?.[k]?.erroPrevisao;
+                    if (erro !== undefined) { totalErros += erro; countErros++; }
+                });
+            }
+            const erroMedio = countErros > 0 ? (totalErros/countErros*100).toFixed(1) : 'N/A';
+            doc.text(`Erro médio de previsão: ${erroMedio}%`, margin, y); y += 6;
+            
+            // Adicionar informações sobre gestão de capacidade
+            if (y > 250) { doc.addPage(); y = margin; }
+            doc.setFontSize(12); doc.text('Gestão de Capacidade', margin, y); y += 6; doc.setFontSize(11);
+            
+            // Calcular estatísticas de turnos e custos
+            let totalTurnosExtras = 0, custoTotalTurnos = 0;
+            const processos = ['tecelagem', 'purgaTinturaria', 'fixacaoAcabamento'];
+            for (let p=13; p<=pEnd; p++) {
+                if (gameData.capacidade[p]) {
+                    processos.forEach(proc => {
+                        const turnos = gameData.capacidade[p][proc]?.turnos || 0;
+                        const turnosExtras = Math.max(0, turnos - 1);
+                        totalTurnosExtras += turnosExtras;
+                        custoTotalTurnos += turnosExtras * 500;
+                    });
+                }
+            }
+            
+            doc.text(`Total de turnos extras utilizados: ${totalTurnosExtras}`, margin, y); y += 6;
+            doc.text(`Custo total de turnos extras: R$ ${custoTotalTurnos.toFixed(2)}`, margin, y); y += 6;
+            doc.text(`Média de turnos extras por período: ${(totalTurnosExtras/12).toFixed(1)}`, margin, y); y += 8;
+            
             doc.text(`Data de início: ${gameData.config.dataInicio?.split('T')[0]||''}`, margin, y); y += 6;
             doc.text('Desenvolvido por: LABINFO/FAEN/UFGD - 2025', margin, y); y += 6;
+            doc.setFontSize(9);
+            doc.text('ProduSIM v1.3.0 - Inclui gestão dinâmica de capacidade e calculadora BOM inteligente', margin, y); y += 6;
 
             doc.save(`Relatorio_Final_ProduSIM_${(gameData.config.empresa||'Empresa').replace(/\s+/g,'_')}.pdf`);
             showToast('Relatório final exportado!', 'success');
@@ -781,7 +817,14 @@
                         </div>
                     </div>
                     <div class="row g-3">
-                        ${PRODUCTS.map(prod => `
+                        ${PRODUCTS.map(prod => {
+                            const periodoFechado = (gameData.config?.ultimoFechado || 0) >= p;
+                            const erroPrevisao = gameData.demanda[p]?.[prod]?.erroPrevisao;
+                            const erroInfo = periodoFechado && erroPrevisao !== undefined ? 
+                                `<div class="alert alert-info mt-2 py-1">
+                                    <small><strong>Erro de Previsão:</strong> ${(erroPrevisao*100).toFixed(1)}%</small>
+                                </div>` : '';
+                            return `
                         <div class="col-md-4">
                             <div class="decision-panel">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
@@ -789,10 +832,13 @@
                                     <span class="badge bg-light text-dark">Base: ${cenario.demandaBase[p][prod]}</span>
                                 </div>
                                 <label class="form-label">Previsão de Demanda</label>
-                                <input type="number" class="form-control" id="prev-${prod}" value="${d[prod].prevista}" min="0">
+                                <input type="number" class="form-control" id="prev-${prod}" value="${d[prod].prevista}" min="0" ${periodoFechado ? 'disabled' : ''}>
                                 <div class="small text-muted mt-2">Real última: ${gameData.demanda[p-1]?.[prod]?.real || 0}</div>
+                                ${periodoFechado ? `<div class="small text-success mt-1">Real atual: ${gameData.demanda[p][prod].real || 0}</div>` : ''}
+                                ${erroInfo}
                             </div>
-                        </div>`).join('')}
+                        </div>`;
+                        }).join('')}
                     </div>
                     <div class="mt-3">
                         <canvas id="chart-demanda" height="100"></canvas>
@@ -803,9 +849,10 @@
             document.getElementById('btn-prev-period').onclick = () => { changePeriod(-1); };
             document.getElementById('btn-next-period').onclick = () => { changePeriod(1); };
             // Save on input change
+            const periodoFechado = (gameData.config?.ultimoFechado || 0) >= p;
             PRODUCTS.forEach(prod => {
                 const inp = document.getElementById(`prev-${prod}`);
-                if (inp) inp.addEventListener('change', (e) => {
+                if (inp && !periodoFechado) inp.addEventListener('change', (e) => {
                     gameData.demanda[p][prod].prevista = Number(e.target.value) || 0;
                     saveGameData();
                     renderDemandaChart();
@@ -877,11 +924,41 @@
             const el = document.getElementById('tela-compras');
             if (!el) return;
             const comp = gameData.compras[p];
+            const periodoFechado = (gameData.config?.ultimoFechado || 0) >= p;
+            
+            // Calcular necessidades BOM baseadas na produção planejada
+            let necessidadesBOM = { fio1: 0, fio2: 0, corantes: 0 };
+            PRODUCTS.forEach(k => {
+                const qtdProduzir = gameData.producao[p][k].planejada || 0;
+                MATERIALS.forEach(m => {
+                    necessidadesBOM[m] += qtdProduzir * (BOM[k][m] || 0);
+                });
+            });
+            
             el.innerHTML = `
                 <div class="simulation-container">
                     <h5 class="mb-3"><i class="bi bi-cart text-primary me-2"></i>Compras – Período ${p}</h5>
+                    
+                    <div class="alert alert-info mb-3">
+                        <strong><i class="bi bi-calculator me-2"></i>Calculadora BOM (baseada na produção planejada):</strong><br>
+                        ${MATERIALS.map(m => {
+                            const necessidade = Math.round(necessidadesBOM[m] * 10) / 10; // Arredondar para 1 casa decimal
+                            const estoque = comp[m].estoqueInicial || 0;
+                            const sugestao = Math.max(0, Math.ceil(necessidade - estoque));
+                            return `<span class="badge bg-light text-dark me-2 mb-1">${m.toUpperCase()}: ${necessidade} unid. necessárias (sugestão: ${sugestao})</span>`;
+                        }).join('')}
+                        ${!periodoFechado ? '<br><button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="aplicarSugestaoBOM()"><i class="bi bi-magic me-1"></i>Aplicar Sugestões BOM</button>' : ''}
+                    </div>
+                    
                     <div class="row g-3">
-                        ${MATERIALS.map(m=>`
+                        ${MATERIALS.map(m=>{
+                            const comprasEmerg = comp[m].comprasEmergencia || 0;
+                            const emergencyInfo = periodoFechado && comprasEmerg > 0 ? 
+                                `<div class="alert alert-warning mt-2 py-2">
+                                    <small><strong>Compras de Emergência:</strong> ${comprasEmerg} unidades<br>
+                                    <em>Custo premium aplicado (+50%)</em></small>
+                                </div>` : '';
+                            return `
                         <div class="col-md-4">
                             <div class="decision-panel">
                                 <div class="d-flex justify-content-between">
@@ -889,18 +966,50 @@
                                     <span class="small text-muted">Est. Inicial: ${comp[m].estoqueInicial}</span>
                                 </div>
                                 <label class="form-label mt-2">Compra Planejada</label>
-                                <input type="number" class="form-control" id="buy-${m}" value="${comp[m].planejada}" min="0">
+                                <input type="number" class="form-control" id="buy-${m}" value="${comp[m].planejada}" min="0" ${periodoFechado ? 'disabled' : ''}>
+                                ${emergencyInfo}
+                                ${periodoFechado ? `<div class="small text-muted mt-2">Est. Final: ${comp[m].estoqueFinal || 0}</div>` : ''}
                             </div>
-                        </div>`).join('')}
+                        </div>`;
+                        }).join('')}
                     </div>
                 </div>`;
             MATERIALS.forEach(m=>{
                 const elIn = document.getElementById(`buy-${m}`);
-                if (elIn) elIn.addEventListener('change',(e)=>{
+                if (elIn && !periodoFechado) elIn.addEventListener('change',(e)=>{
                     gameData.compras[p][m].planejada = Number(e.target.value)||0;
                     saveGameData();
                 });
             });
+        }
+
+        // Função para aplicar sugestões BOM automaticamente
+        function aplicarSugestaoBOM() {
+            const p = getPeriodoAtual();
+            const comp = gameData.compras[p];
+            
+            // Calcular necessidades BOM
+            let necessidadesBOM = { fio1: 0, fio2: 0, corantes: 0 };
+            PRODUCTS.forEach(k => {
+                const qtdProduzir = gameData.producao[p][k].planejada || 0;
+                MATERIALS.forEach(m => {
+                    necessidadesBOM[m] += qtdProduzir * (BOM[k][m] || 0);
+                });
+            });
+            
+            // Aplicar sugestões
+            MATERIALS.forEach(m => {
+                const necessidade = necessidadesBOM[m];
+                const estoque = comp[m].estoqueInicial || 0;
+                const sugestao = Math.max(0, Math.ceil(necessidade - estoque));
+                
+                comp[m].planejada = sugestao;
+                const input = document.getElementById(`buy-${m}`);
+                if (input) input.value = sugestao;
+            });
+            
+            saveGameData();
+            showToast('Sugestões BOM aplicadas com sucesso!', 'success');
         }
 
         // Render: Capacidade
@@ -909,23 +1018,97 @@
             const el = document.getElementById('tela-capacidade');
             if (!el) return;
             const cap = computeCapacity(p);
+            const capData = gameData.capacidade[p];
+            const periodoFechado = (gameData.config?.ultimoFechado || 0) >= p;
+            
             el.innerHTML = `
                 <div class="simulation-container">
                     <h5 class="mb-3"><i class="bi bi-building text-primary me-2"></i>Capacidade – Período ${p}</h5>
+                    
+                    <div class="alert alert-info mb-3">
+                        <strong><i class="bi bi-info-circle me-2"></i>Ajuste de Turnos por Processo:</strong><br>
+                        <small>Você pode ajustar o número de turnos para cada processo. Mais turnos = maior capacidade, mas também maiores custos fixos.</small>
+                    </div>
+                    
+                    <div class="row g-3 mb-4">
+                        ${['tecelagem','purgaTinturaria','fixacaoAcabamento'].map(proc=>{
+                            const maquinas = proc === 'tecelagem' ? 'teares' : (proc === 'purgaTinturaria' ? 'jets' : 'ramas');
+                            const numMaquinas = capData[proc][maquinas] || 0;
+                            const turnosAtual = capData[proc].turnos || 0;
+                            const maxTurnos = 3; // Máximo 3 turnos por processo
+                            
+                            return `
+                            <div class="col-md-4">
+                                <div class="decision-panel">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <strong>${proc.charAt(0).toUpperCase() + proc.slice(1)}</strong>
+                                        <span class="small text-muted">${numMaquinas} ${maquinas}</span>
+                                    </div>
+                                    
+                                    <label class="form-label">Turnos de Trabalho</label>
+                                    <select class="form-control" id="turnos-${proc}" ${periodoFechado ? 'disabled' : ''}>
+                                        ${[...Array(maxTurnos + 1)].map((_, i) => 
+                                            `<option value="${i}" ${turnosAtual === i ? 'selected' : ''}>
+                                                ${i === 0 ? '0 turnos (parado)' : `${i} turno${i > 1 ? 's' : ''}`}
+                                            </option>`
+                                        ).join('')}
+                                    </select>
+                                    
+                                    <div class="mt-2 small">
+                                        <div>Capacidade: ${cap[proc].disponivel.toFixed(0)} h/período</div>
+                                        <div>Necessária: ${cap[proc].necessaria.toFixed(0)} h/período</div>
+                                        ${cap[proc].necessaria > cap[proc].disponivel ? 
+                                            '<div class="text-danger"><i class="bi bi-exclamation-triangle me-1"></i>Terceirização necessária!</div>' : 
+                                            '<div class="text-success"><i class="bi bi-check-circle me-1"></i>Capacidade suficiente</div>'}
+                                    </div>
+                                </div>
+                            </div>`;
+                        }).join('')}
+                    </div>
+                    
                     <div class="row g-3">
                         ${['tecelagem','purgaTinturaria','fixacaoAcabamento'].map(proc=>{
                             const util = cap[proc].necessaria>0? Math.min(100, Math.round((cap[proc].necessaria/cap[proc].disponivel)*100)) : 0;
                             return `
                             <div class="col-md-4">
                                 <div class="result-panel">
-                                    <div class="d-flex justify-content-between mb-1"><strong>${proc}</strong><span class="small">Utilização: ${util}%</span></div>
-                                    <div class="progress mb-2"><div class="progress-bar ${util>100? 'bg-danger':''}" role="progressbar" style="width:${Math.min(util,100)}%"></div></div>
-                                    <div class="small">Necessária: ${cap[proc].necessaria.toFixed(0)} | Disponível: ${cap[proc].disponivel.toFixed(0)}</div>
+                                    <div class="d-flex justify-content-between mb-1"><strong>Utilização ${proc}</strong><span class="small">${util}%</span></div>
+                                    <div class="progress mb-2"><div class="progress-bar ${util>100? 'bg-danger':'bg-success'}" role="progressbar" style="width:${Math.min(util,100)}%"></div></div>
+                                    <div class="small">
+                                        ${util > 100 ? 
+                                            `<span class="text-danger">Sobrecarga: ${(cap[proc].necessaria - cap[proc].disponivel).toFixed(0)} h terceirizadas</span>` :
+                                            `<span class="text-success">Folga: ${(cap[proc].disponivel - cap[proc].necessaria).toFixed(0)} h disponíveis</span>`
+                                        }
+                                    </div>
                                 </div>
                             </div>`;
                         }).join('')}
                     </div>
                 </div>`;
+
+            // Adicionar event listeners para os selects de turnos
+            if (!periodoFechado) {
+                ['tecelagem','purgaTinturaria','fixacaoAcabamento'].forEach(proc => {
+                    const select = document.getElementById(`turnos-${proc}`);
+                    if (select) {
+                        select.addEventListener('change', (e) => {
+                            const newTurnos = Number(e.target.value);
+                            console.log(`Alterando turnos de ${proc} para ${newTurnos}`);
+                            
+                            // Atualizar os dados
+                            gameData.capacidade[p][proc].turnos = newTurnos;
+                            
+                            // Salvar primeiro
+                            saveGameData();
+                            
+                            // Aguardar um pequeno delay e então atualizar a interface
+                            setTimeout(() => {
+                                updateCapacidadeDisplay();
+                            }, 50);
+                        });
+                    }
+                });
+            }
         }
 
         // Render: Financeiro
@@ -944,6 +1127,26 @@
                 if (totalAbs === 0) computeFinance(p);
             }
             const fin = gameData.financeiro[p] || {};
+            
+            // Calcular custos de compras de emergência para o período
+            let custoComprasEmergencia = 0;
+            if (gameData.compras[p]) {
+                MATERIALS.forEach(m => {
+                    const comprasEmerg = gameData.compras[p][m].comprasEmergencia || 0;
+                    custoComprasEmergencia += comprasEmerg * (MATERIAL_COST[m] || 0) * 1.5;
+                });
+            }
+            
+            // Calcular custo de turnos extras
+            let custoTurnosExtras = 0;
+            if (gameData.capacidade[p]) {
+                const capData = gameData.capacidade[p];
+                const turnosExtras = Math.max(0, (capData.tecelagem.turnos || 0) - 1) +
+                                    Math.max(0, (capData.purgaTinturaria.turnos || 0) - 1) +
+                                    Math.max(0, (capData.fixacaoAcabamento.turnos || 0) - 1);
+                custoTurnosExtras = turnosExtras * 500;
+            }
+            
             el.innerHTML = `
                 <div class="simulation-container">
                     <div class="d-flex justify-content-between align-items-center">
@@ -959,8 +1162,10 @@
                     <div class="row g-3">
                         ${[
                             ['Receita de Vendas', fin.receitaVendas],
-                            ['Custos de Compras', -fin.custosCompras],
-                            ['Custos Fixos', -fin.custosFixos],
+                            ['Custos de Compras', -((fin.custosCompras || 0) - custoComprasEmergencia)],
+                            ['Compras de Emergência', -custoComprasEmergencia],
+                            ['Custos Fixos Base', -(fin.custosFixos - custoTurnosExtras)],
+                            ['Custos Turnos Extras', -custoTurnosExtras],
                             ['Custos de Estoque', -fin.custosEstoques],
                             ['Vendas Perdidas', -fin.custosVendasPerdidas],
                             ['Terceirização', -fin.custosTerceirizacao],
@@ -1090,12 +1295,23 @@
         function computeCapacity(p) {
             const prod = gameData.producao[p];
             const recursos = gameData.capacidade[p];
+            
+            // Debug: verificar se os turnos estão sendo lidos corretamente
+            console.log(`Período ${p} - Turnos:`, {
+                tecelagem: recursos.tecelagem.turnos,
+                purgaTinturaria: recursos.purgaTinturaria.turnos,
+                fixacaoAcabamento: recursos.fixacaoAcabamento.turnos
+            });
+            
             // Disponível
             const disp = {
                 tecelagem: (recursos.tecelagem.teares || 0) * (recursos.tecelagem.turnos || 0) * PROCESS_RATES.tecelagem,
                 purgaTinturaria: (recursos.purgaTinturaria.jets || 0) * (recursos.purgaTinturaria.turnos || 0) * PROCESS_RATES.purgaTinturaria,
                 fixacaoAcabamento: (recursos.fixacaoAcabamento.ramas || 0) * (recursos.fixacaoAcabamento.turnos || 0) * PROCESS_RATES.fixacaoAcabamento
             };
+            
+            console.log(`Período ${p} - Capacidade disponível:`, disp);
+            
             // Necessária
             const necess = { tecelagem: 0, purgaTinturaria: 0, fixacaoAcabamento: 0 };
             PRODUCTS.forEach(k => {
@@ -1104,6 +1320,7 @@
                 necess.purgaTinturaria += q * PROCESS_WEIGHTS[k].purgaTinturaria;
                 necess.fixacaoAcabamento += q * PROCESS_WEIGHTS[k].fixacaoAcabamento;
             });
+            
             return {
                 tecelagem: { necessaria: necess.tecelagem, disponivel: disp.tecelagem },
                 purgaTinturaria: { necessaria: necess.purgaTinturaria, disponivel: disp.purgaTinturaria },
@@ -1119,6 +1336,74 @@
             return dem>0 ? vend/dem : 1;
         }
 
+        
+        // Função para testar o sistema de compras de emergência (apenas para debug)
+        function debugComprasEmergencia() {
+            console.log("=== DEBUG: Sistema de Compras de Emergência ===");
+            const p = getPeriodoAtual();
+            
+            // Estado atual dos materiais
+            console.log("Estado atual dos materiais (período " + p + "):");
+            MATERIALS.forEach(m => {
+                const comp = gameData.compras[p][m];
+                console.log(`${m}: Estoque Inicial=${comp.estoqueInicial}, Compras Planejadas=${comp.planejada}, Compras Emergência=${comp.comprasEmergencia || 0}, Estoque Final=${comp.estoqueFinal || 0}`);
+            });
+            
+            // Estado da produção
+            console.log("Estado da produção (período " + p + "):");
+            PRODUCTS.forEach(k => {
+                const prod = gameData.producao[p][k];
+                console.log(`${k}: Planejada=${prod.planejada}, Real=${prod.real || 0}, Vendas=${prod.vendas || 0}`);
+            });
+            
+            // Cálculo de necessidades (BOM)
+            console.log("Cálculo de necessidades de materiais:");
+            MATERIALS.forEach(m => {
+                let totalNecessario = 0;
+                PRODUCTS.forEach(k => {
+                    const qtdProd = gameData.producao[p][k].real || gameData.producao[p][k].planejada || 0;
+                    const necessidade = qtdProd * (BOM[k][m] || 0);
+                    if (necessidade > 0) {
+                        console.log(`  ${k} → ${m}: ${qtdProd} unidades * ${BOM[k][m]} = ${necessidade}`);
+                        totalNecessario += necessidade;
+                    }
+                });
+                console.log(`  Total necessário de ${m}: ${totalNecessario}`);
+            });
+        }
+        
+        /*
+         * CORREÇÃO IMPLEMENTADA: Sistema de Compras de Emergência
+         * 
+         * Problema identificado: O sistema estava descartando compras terceirizadas 
+         * ao invés de incorporá-las ao inventário para uso futuro.
+         * 
+         * Solução implementada:
+         * 1. Detecta quando há falta de material (consumo > estoque inicial + compras planejadas)
+         * 2. Calcula automaticamente compras de emergência para cobrir o déficit
+         * 3. Incorpora essas compras ao inventário disponível para uso
+         * 4. Aplica custo premium (+50%) para compras de emergência
+         * 5. Separa custos de compras normais vs emergência no relatório financeiro
+         * 6. Notifica o usuário quando compras de emergência são realizadas
+         * 7. Exibe informações de compras de emergência na interface
+         * 
+         * CORREÇÃO ADICIONAL: Demanda Real Baseada na Previsão
+         * 
+         * Problema identificado: A demanda real era sempre baseada apenas na demanda base,
+         * ignorando completamente a previsão inserida pelo jogador.
+         * 
+         * Solução implementada:
+         * 1. Demanda real agora usa média ponderada: 70% previsão + 30% base histórica
+         * 2. Cálculo do erro de previsão (MAPE) para avaliar qualidade da previsão
+         * 3. Interface mostra erro de previsão em períodos fechados
+         * 4. Relatório final inclui erro médio de previsão como indicador
+         * 5. Campos desabilitados para períodos já fechados
+         * 
+         * Impacto: A produção não será mais limitada por falta de material, mas
+         * haverá custo adicional pelas compras não planejadas. A previsão agora
+         * influencia a demanda real, tornando o jogo mais realista e educativo.
+         */
+        
         function closePeriod() {
             const p = getPeriodoAtual();
             try {
@@ -1132,9 +1417,22 @@
                 const cen = gameData.config.cenario;
                 PRODUCTS.forEach(k=>{
                     const base = cen.demandaBase[p][k];
+                    const previsao = gameData.demanda[p][k].prevista || 0;
+                    
+                    // Se há previsão, usa média ponderada entre previsão (70%) e base (30%)
+                    // Isso simula que a previsão tem influência na demanda real, mas não controle total
+                    const demandaEsperada = previsao > 0 ? 
+                        (previsao * 0.7 + base * 0.3) : base;
+                    
                     const noise = (Math.random()*2 - 1) * cen.volatilidade; // -vol..+vol
-                    const real = Math.max(0, Math.round(base * (1 + noise)));
+                    const real = Math.max(0, Math.round(demandaEsperada * (1 + noise)));
                     gameData.demanda[p][k].real = real;
+                    
+                    // Calcular erro de previsão (MAPE - Mean Absolute Percentage Error)
+                    if (gameData.demanda[p][k].prevista > 0) {
+                        const erro = Math.abs(real - gameData.demanda[p][k].prevista) / real;
+                        gameData.demanda[p][k].erroPrevisao = erro;
+                    }
                 });
                 // 2) Compras realizadas
                 MATERIALS.forEach(m=>{
@@ -1155,6 +1453,8 @@
                     gameData.producao[p][k].real = real;
                 });
                 // 4) Consumo de materiais
+                let totalComprasEmergencia = 0;
+                let materiaisEmergencia = [];
                 MATERIALS.forEach(m=>{
                     const comp = gameData.compras[p][m];
                     let consumo = 0;
@@ -1162,8 +1462,26 @@
                         consumo += (gameData.producao[p][k].real || 0) * (BOM[k][m]||0);
                     });
                     comp.consumoReal = consumo;
-                    comp.estoqueFinal = Math.max(0, (comp.estoqueInicial||0) + (comp.real||0) - consumo);
+                    
+                    // Calcular disponibilidade de material
+                    const disponivel = (comp.estoqueInicial||0) + (comp.real||0);
+                    
+                    // Se há falta de material, realizar compras de emergência/terceirizadas
+                    if (consumo > disponivel) {
+                        comp.comprasEmergencia = consumo - disponivel;
+                        comp.estoqueFinal = 0; // Todo material foi consumido
+                        totalComprasEmergencia += comp.comprasEmergencia;
+                        materiaisEmergencia.push(`${m.toUpperCase()}: ${comp.comprasEmergencia}`);
+                    } else {
+                        comp.comprasEmergencia = 0;
+                        comp.estoqueFinal = disponivel - consumo;
+                    }
                 });
+                
+                // Notificar sobre compras de emergência
+                if (totalComprasEmergencia > 0) {
+                    showToast(`Compras de emergência realizadas: ${materiaisEmergencia.join(', ')}. Custo premium aplicado (+50%).`, 'warning');
+                }
                 // 5) Vendas e estoques de produtos
                 PRODUCTS.forEach(k=>{
                     const estIni = gameData.producao[p][k].estoqueInicial || 0;
@@ -1217,15 +1535,29 @@
                 estoqueFinal += safeNum(gameData.producao[p][k].estoqueFinal, 0);
             });
             // Compras custo
-            let custoCompras = 0; let estoqueMatFinal = 0;
+            let custoCompras = 0; let estoqueMatFinal = 0; let custoComprasEmergencia = 0;
             MATERIALS.forEach(m=>{
                 custoCompras += safeNum(gameData.compras[p][m].real, 0) * safeNum(MATERIAL_COST[m], 0);
+                // Compras de emergência têm custo premium (multiplicador de 1.5x do custo normal)
+                custoComprasEmergencia += safeNum(gameData.compras[p][m].comprasEmergencia, 0) * safeNum(MATERIAL_COST[m], 0) * 1.5;
                 estoqueMatFinal += safeNum(gameData.compras[p][m].estoqueFinal, 0);
             });
+            // Total de custos de compras (planejadas + emergência)
+            custoCompras += custoComprasEmergencia;
             // Custos
             const custoEstoque = (estoqueFinal + estoqueMatFinal) * safeNum(cen.custoEstoque, DEFAULT_COSTS.custoEstoque);
             const custoPerdas = safeNum(cen.penalidadePerda, DEFAULT_COSTS.penalidadePerda) * perdidas;
-            const custosFixos = safeNum(cen.custosFixos, DEFAULT_COSTS.custosFixos);
+            
+            // Custos fixos base + custos de turnos extras
+            let custosFixos = safeNum(cen.custosFixos, DEFAULT_COSTS.custosFixos);
+            
+            // Adicionar custo por turnos extras (turnos > 1 custam R$ 500 cada)
+            const capData = gameData.capacidade[p];
+            const turnosExtras = Math.max(0, (capData.tecelagem.turnos || 0) - 1) +
+                                Math.max(0, (capData.purgaTinturaria.turnos || 0) - 1) +
+                                Math.max(0, (capData.fixacaoAcabamento.turnos || 0) - 1);
+            custosFixos += turnosExtras * 500; // R$ 500 por turno extra
+            
             // Terceirização aproximada pela folga negativa em capacidade
             const cap = computeCapacity(p);
             const shortTec = Math.max(0, cap.tecelagem.necessaria - cap.tecelagem.disponivel);

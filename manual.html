@@ -38,7 +38,7 @@
     <div class="container">
       <h1 class="display-6 fw-bold mb-2">Manual do ProduSIM</h1>
       <p class="mb-0">Funcionamento, regras, mecânica, lógica utilizada e comparativo com o LSSP PCP.</p>
-      <small class="opacity-75">Atualizado em 05/09/2025 • Versão 1.0.0</small>
+      <small class="opacity-75">Atualizado em 18/09/2025 • Versão 1.3.0</small>
     </div>
   </header>
 
@@ -54,10 +54,13 @@
                 <li><a href="#inicio-rapido">2. Início Rápido</a></li>
                 <li><a href="#regras-mecanica">3. Regras e Mecânica</a></li>
                 <li><a href="#logica">4. Lógica Utilizada</a></li>
+                <li><a href="#compras-emergencia" class="ms-2">4.2 Sistema de Compras de Emergência</a></li>
+                <li><a href="#gestao-capacidade" class="ms-2">4.3 Gestão Dinâmica de Capacidade</a></li>
                 <li><a href="#fluxo-ui">5. Fluxo e Interface</a></li>
                 <li><a href="#relatorios">6. Relatórios e PDFs</a></li>
                 <li><a href="#persistencia">7. Persistência e Reset</a></li>
                 <li><a href="#estrategias">8. Estratégias e Boas Práticas</a></li>
+                <li><a href="#mecanicas-avancadas" class="ms-2">8.1 Mecânicas Avançadas de Demanda e Previsão</a></li>
                 <li><a href="#comparativo">9. Comparativo com o LSSP PCP</a></li>
                 <li><a href="#homenagem">10. Homenagem</a></li>
                 <li><a href="#creditos">11. Créditos e Licença</a></li>
@@ -91,8 +94,11 @@
             <ul>
               <li><strong>Horizonte:</strong> períodos 13 a 24.</li>
               <li><strong>Decisões:</strong> previsão, produção, compras, uso de capacidade e fechamento do período.</li>
+              <li><strong>Demanda Realística:</strong> a partir da v1.2.0, a demanda real é influenciada pelas previsões do usuário (70%) combinada com demanda base (30%) mais volatilidade.</li>
+              <li><strong>Acompanhamento de Precisão:</strong> cálculo automático do MAPE (erro percentual absoluto médio) para feedback sobre qualidade das previsões.</li>
+              <li><strong>Compras:</strong> planeje adequadamente os insumos conforme BOM. Em caso de falta de material, compras de emergência são realizadas automaticamente com custo premium (+50%).</li>
               <li><strong>Capacidade:</strong> avalie a carga versus a capacidade disponível; excesso pode gerar custos adicionais ou perdas (dependendo do cenário).</li>
-              <li><strong>Financeiro:</strong> resultados por período e acumulados; ao final, relatório consolidado em PDF.</li>
+              <li><strong>Financeiro:</strong> resultados por período e acumulados, incluindo custos separados para compras normais e de emergência; ao final, relatório consolidado em PDF.</li>
               <li><strong>Relatórios:</strong> durante o jogo é possível ver resultados por período; o PDF final é único ao concluir o período 24.</li>
             </ul>
             <div class="text-center my-3">
@@ -154,6 +160,71 @@
             </div>
           </section>
 
+          <section id="compras-emergencia" class="anchor-offset mb-4">
+            <h2>4.2 Sistema de Compras de Emergência (PCP1)</h2>
+            <p>O módulo PCP1 implementa um sistema inteligente de gestão de materiais que garante a continuidade da produção mesmo em casos de planejamento inadequado de compras.</p>
+            
+            <h5 class="mt-3">Funcionamento</h5>
+            <ul>
+              <li><strong>Detecção Automática:</strong> Ao fechar um período, o sistema verifica se há material suficiente (estoque inicial + compras planejadas) para atender o consumo da produção real.</li>
+              <li><strong>Compras Automáticas:</strong> Se há déficit de material, compras de emergência são realizadas automaticamente para cobrir a falta.</li>
+              <li><strong>Incorporação ao Inventário:</strong> O material adquirido em emergência é imediatamente incorporado ao inventário e usado na produção.</li>
+              <li><strong>Custo Premium:</strong> Compras de emergência custam 50% a mais que o preço normal do material.</li>
+            </ul>
+
+            <h5 class="mt-3">Impacto Pedagógico</h5>
+            <ul>
+              <li><strong>Realismo:</strong> Simula situações reais onde empresas precisam fazer compras urgentes quando há falha no planejamento.</li>
+              <li><strong>Trade-offs:</strong> Ensina sobre o equilíbrio entre manter estoques (custos de capital) versus riscos de falta (custos de emergência).</li>
+              <li><strong>Continuidade:</strong> Evita interrupção artificial da simulação por limitações de material.</li>
+              <li><strong>Transparência:</strong> Notificações claras quando compras de emergência ocorrem, com detalhamento de quantidades e custos.</li>
+            </ul>
+
+            <h5 class="mt-3">Visualização</h5>
+            <ul>
+              <li><strong>Tela de Compras:</strong> Exibe alertas visuais quando compras de emergência foram realizadas, com quantidades e custos.</li>
+              <li><strong>Relatório Financeiro:</strong> Linha separada para custos de compras normais vs. emergência, facilitando análise de performance.</li>
+              <li><strong>Notificações:</strong> Toast messages informam sobre compras de emergência ao fechar períodos.</li>
+            </ul>
+          </section>
+
+          <section id="gestao-capacidade" class="anchor-offset mb-4">
+            <h2>4.3 Gestão Dinâmica de Capacidade</h2>
+            <p>A partir da versão 1.3.0, o ProduSIM permite ajuste dinâmico da capacidade produtiva através da gestão de turnos de trabalho por período.</p>
+
+            <h5 class="mt-3">Mecânica dos Turnos</h5>
+            <ul>
+              <li><strong>Ajuste Flexível:</strong> Cada processo (Tecelagem, Purga/Tinturaria, Fixação/Acabamento) pode operar de 0 a 3 turnos por período.</li>
+              <li><strong>Capacidade Base:</strong> Definida pelo número de máquinas × turnos × taxa de processamento por período.</li>
+              <li><strong>Decisão Estratégica:</strong> Jogadores podem aumentar turnos para evitar terceirização ou reduzi-los para economizar custos fixos.</li>
+              <li><strong>Impacto Imediato:</strong> Alterações nos turnos refletem instantaneamente na capacidade disponível do período.</li>
+            </ul>
+
+            <h5 class="mt-3">Sistema de Custos</h5>
+            <ul>
+              <li><strong>Primeiro Turno:</strong> Incluído no custo fixo base (sem custo adicional).</li>
+              <li><strong>Turnos Extras:</strong> Cada turno adicional (2º e 3º) custa R$ 500 por processo por período.</li>
+              <li><strong>Transparência:</strong> Custos de turnos extras aparecem separadamente no relatório financeiro.</li>
+              <li><strong>Trade-off:</strong> Compare custo do turno extra (R$ 500) vs. custo de terceirização (R$ 3 por hora).</li>
+            </ul>
+
+            <h5 class="mt-3">Interface e Feedback</h5>
+            <ul>
+              <li><strong>Seletores Intuitivos:</strong> Dropdowns para cada processo permitindo seleção de 0-3 turnos.</li>
+              <li><strong>Cálculo em Tempo Real:</strong> Capacidade disponível atualizada automaticamente conforme ajustes.</li>
+              <li><strong>Alertas Visuais:</strong> Indicadores verdes (capacidade OK) ou vermelhos (terceirização necessária).</li>
+              <li><strong>Análise de Folgas:</strong> Mostra horas disponíveis ou sobrecarga para cada processo.</li>
+            </ul>
+
+            <h5 class="mt-3">Valor Educacional</h5>
+            <ul>
+              <li><strong>Planejamento Estratégico:</strong> Ensina análise de cenários e otimização de recursos.</li>
+              <li><strong>Gestão de Custos:</strong> Demonstra trade-offs entre custos fixos e variáveis.</li>
+              <li><strong>Flexibilidade Operacional:</strong> Simula ajustes de capacidade conforme demanda.</li>
+              <li><strong>Análise "What-If":</strong> Permite testar diferentes configurações de turnos.</li>
+            </ul>
+          </section>
+
           <section id="fluxo-ui" class="anchor-offset mb-4">
             <h2>5. Fluxo e Interface</h2>
             <ul>
@@ -184,11 +255,53 @@
 
           <section id="estrategias" class="anchor-offset mb-4">
             <h2>8. Estratégias e Boas Práticas</h2>
+            <h5 class="mt-3">PCP1</h5>
+            <ul>
+              <li><strong>Planejamento de Compras:</strong> Use a calculadora BOM para determinar necessidades exatas de material. Compras insuficientes resultam em aquisições de emergência com custo premium (+50%).</li>
+              <li><strong>Previsões Precisas:</strong> As previsões influenciam diretamente a demanda real (70% previsão + 30% demanda base). Previsões ruins geram demanda inesperada e custos extras.</li>
+              <li><strong>Gestão de Capacidade:</strong> Ajuste turnos estrategicamente conforme necessidade. Turnos extras custam R$ 500 por processo, mas podem ser mais baratos que terceirização (R$ 3/hora).</li>
+              <li><strong>Análise de Trade-offs:</strong> Compare custos: turno extra vs terceirização vs perdas de venda. Cada opção tem impactos diferentes.</li>
+              <li><strong>Monitoramento de Erros:</strong> Acompanhe o MAPE (Mean Absolute Percentage Error) exibido para avaliar a qualidade das suas previsões e melhorar a acurácia.</li>
+              <li><strong>Gestão de Estoque:</strong> Equilibre estoques - muito alto gera custos de capital, muito baixo causa compras emergenciais caras.</li>
+              <li><strong>Monitoramento:</strong> Use alertas visuais e relatórios detalhados para identificar oportunidades de melhoria.</li>
+              <li><strong>Análise Financeira:</strong> Use a separação detalhada de custos (compras normais/emergência, turnos base/extras) para avaliar qualidade do planejamento.</li>
+            </ul>
+            <h5 class="mt-3">PCP2</h5>
             <ul>
               <li>Alinhe o plano (MPS) à capacidade disponível para evitar atrasos e backlog.</li>
               <li>Escolha a política de lote considerando trade-offs: L4L minimiza estoque; FOQ reduz setups.</li>
               <li>Reavalie o sequenciamento quando a carga exceder a capacidade do período.</li>
               <li>Acompanhe o financeiro acumulado e ajuste decisões para melhorar o resultado.</li>
+            </ul>
+          </section>
+
+          <section id="mecanicas-avancadas" class="anchor-offset mb-4">
+            <h2>8.1. Mecânicas Avançadas de Demanda e Previsão</h2>
+            <h5 class="mt-3">Cálculo de Demanda Realística</h5>
+            <p>A partir da versão 1.2.0, o ProduSIM implementa um sistema de demanda mais realístico onde as previsões do usuário influenciam diretamente os valores realizados:</p>
+            <ul>
+              <li><strong>Fórmula:</strong> Demanda Real = (70% × Previsão do Usuário) + (30% × Demanda Base) + Variação Aleatória</li>
+              <li><strong>Volatilidade:</strong> Aplicada como percentual sobre o valor calculado (configurável no cenário)</li>
+              <li><strong>Impacto Educacional:</strong> Previsões mais próximas da realidade resultam em melhor performance operacional</li>
+            </ul>
+
+            <h5 class="mt-3">Acompanhamento de Precisão (MAPE)</h5>
+            <p>O sistema calcula automaticamente o erro percentual absoluto médio das previsões:</p>
+            <ul>
+              <li><strong>MAPE (Mean Absolute Percentage Error):</strong> |Previsto - Realizado| / Realizado × 100</li>
+              <li><strong>Exibição:</strong> Mostrado na interface após cada período para feedback imediato</li>
+              <li><strong>Interpretação:</strong> Valores menores indicam previsões mais precisas</li>
+              <li><strong>Objetivo Didático:</strong> Desenvolver consciência sobre a importância da qualidade das previsões</li>
+            </ul>
+
+            <h5 class="mt-3">Sistema de Compras de Emergência</h5>
+            <p>Quando há falta de material para atender a produção planejada:</p>
+            <ul>
+              <li><strong>Ativação Automática:</strong> Compra automática da quantidade em falta</li>
+              <li><strong>Custo Premium:</strong> 150% do custo base do material (50% de sobrecarga)</li>
+              <li><strong>Incorporação:</strong> Material adquirido é automaticamente incorporado ao estoque</li>
+              <li><strong>Alertas Visuais:</strong> Interface destaca compras de emergência em vermelho</li>
+              <li><strong>Rastreamento Financeiro:</strong> Custos separados no relatório financeiro</li>
             </ul>
           </section>
 
