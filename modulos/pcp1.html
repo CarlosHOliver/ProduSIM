@@ -1036,30 +1036,44 @@
                             const numMaquinas = capData[proc][maquinas] || 0;
                             const turnosAtual = capData[proc].turnos || 0;
                             const maxTurnos = 3; // Máximo 3 turnos por processo
+                            const semEquipamento = numMaquinas === 0;
                             
                             return `
                             <div class="col-md-4">
-                                <div class="decision-panel">
+                                <div class="decision-panel ${semEquipamento ? 'border-warning' : ''}">
                                     <div class="d-flex justify-content-between mb-2">
                                         <strong>${proc.charAt(0).toUpperCase() + proc.slice(1)}</strong>
                                         <span class="small text-muted">${numMaquinas} ${maquinas}</span>
                                     </div>
                                     
-                                    <label class="form-label">Turnos de Trabalho</label>
-                                    <select class="form-control" id="turnos-${proc}" ${periodoFechado ? 'disabled' : ''}>
-                                        ${[...Array(maxTurnos + 1)].map((_, i) => 
-                                            `<option value="${i}" ${turnosAtual === i ? 'selected' : ''}>
-                                                ${i === 0 ? '0 turnos (parado)' : `${i} turno${i > 1 ? 's' : ''}`}
-                                            </option>`
-                                        ).join('')}
-                                    </select>
+                                    ${semEquipamento ? `
+                                        <div class="alert alert-warning alert-sm p-2 mb-2">
+                                            <i class="bi bi-exclamation-triangle me-1"></i>
+                                            <strong>Sem equipamento!</strong><br>
+                                            <small>Esta empresa não possui ${maquinas} para este processo. Todo trabalho será terceirizado.</small>
+                                        </div>
+                                        <select class="form-control" disabled>
+                                            <option>0 turnos (sem equipamento)</option>
+                                        </select>
+                                    ` : `
+                                        <label class="form-label">Turnos de Trabalho</label>
+                                        <select class="form-control" id="turnos-${proc}" ${periodoFechado ? 'disabled' : ''}>
+                                            ${[...Array(maxTurnos + 1)].map((_, i) => 
+                                                `<option value="${i}" ${turnosAtual === i ? 'selected' : ''}>
+                                                    ${i === 0 ? '0 turnos (parado)' : `${i} turno${i > 1 ? 's' : ''}`}
+                                                </option>`
+                                            ).join('')}
+                                        </select>
+                                    `}
                                     
                                     <div class="mt-2 small">
                                         <div>Capacidade: ${cap[proc].disponivel.toFixed(0)} h/período</div>
                                         <div>Necessária: ${cap[proc].necessaria.toFixed(0)} h/período</div>
-                                        ${cap[proc].necessaria > cap[proc].disponivel ? 
-                                            '<div class="text-danger"><i class="bi bi-exclamation-triangle me-1"></i>Terceirização necessária!</div>' : 
-                                            '<div class="text-success"><i class="bi bi-check-circle me-1"></i>Capacidade suficiente</div>'}
+                                        ${cap[proc].necessaria > 0 && cap[proc].disponivel === 0 ? 
+                                            '<div class="text-warning"><i class="bi bi-exclamation-triangle me-1"></i>100% terceirizado</div>' :
+                                            cap[proc].necessaria > cap[proc].disponivel ? 
+                                                '<div class="text-danger"><i class="bi bi-exclamation-triangle me-1"></i>Terceirização necessária!</div>' : 
+                                                '<div class="text-success"><i class="bi bi-check-circle me-1"></i>Capacidade suficiente</div>'}
                                     </div>
                                 </div>
                             </div>`;
@@ -1069,15 +1083,27 @@
                     <div class="row g-3">
                         ${['tecelagem','purgaTinturaria','fixacaoAcabamento'].map(proc=>{
                             const util = cap[proc].necessaria>0? Math.min(100, Math.round((cap[proc].necessaria/cap[proc].disponivel)*100)) : 0;
+                            const semEquipamento = (capData[proc][proc === 'tecelagem' ? 'teares' : (proc === 'purgaTinturaria' ? 'jets' : 'ramas')] || 0) === 0;
+                            const terceirizacaoTotal = cap[proc].necessaria > 0 && cap[proc].disponivel === 0;
+                            
                             return `
                             <div class="col-md-4">
-                                <div class="result-panel">
-                                    <div class="d-flex justify-content-between mb-1"><strong>Utilização ${proc}</strong><span class="small">${util}%</span></div>
-                                    <div class="progress mb-2"><div class="progress-bar ${util>100? 'bg-danger':'bg-success'}" role="progressbar" style="width:${Math.min(util,100)}%"></div></div>
+                                <div class="result-panel ${terceirizacaoTotal ? 'border-warning' : ''}">
+                                    <div class="d-flex justify-content-between mb-1"><strong>Utilização ${proc}</strong><span class="small">${terceirizacaoTotal ? '100% Terc.' : util + '%'}</span></div>
+                                    <div class="progress mb-2">
+                                        <div class="progress-bar ${terceirizacaoTotal ? 'bg-warning' : util>100? 'bg-danger':'bg-success'}" 
+                                             role="progressbar" 
+                                             style="width:${terceirizacaoTotal ? 100 : Math.min(util,100)}%">
+                                        </div>
+                                    </div>
                                     <div class="small">
-                                        ${util > 100 ? 
-                                            `<span class="text-danger">Sobrecarga: ${(cap[proc].necessaria - cap[proc].disponivel).toFixed(0)} h terceirizadas</span>` :
-                                            `<span class="text-success">Folga: ${(cap[proc].disponivel - cap[proc].necessaria).toFixed(0)} h disponíveis</span>`
+                                        ${terceirizacaoTotal ? 
+                                            `<span class="text-warning"><i class="bi bi-exclamation-triangle me-1"></i>Tudo terceirizado (${cap[proc].necessaria.toFixed(0)}h)</span>` :
+                                            util > 100 ? 
+                                                `<span class="text-danger">Sobrecarga: ${(cap[proc].necessaria - cap[proc].disponivel).toFixed(0)} h terceirizadas</span>` :
+                                                cap[proc].necessaria > 0 ?
+                                                    `<span class="text-success">Folga: ${(cap[proc].disponivel - cap[proc].necessaria).toFixed(0)} h disponíveis</span>` :
+                                                    `<span class="text-muted">Processo parado</span>`
                                         }
                                     </div>
                                 </div>
@@ -1090,22 +1116,30 @@
             if (!periodoFechado) {
                 ['tecelagem','purgaTinturaria','fixacaoAcabamento'].forEach(proc => {
                     const select = document.getElementById(`turnos-${proc}`);
-                    if (select) {
+                    // Só adicionar event listener se o select existir e não estiver desabilitado
+                    if (select && !select.disabled) {
                         select.addEventListener('change', (e) => {
                             const newTurnos = Number(e.target.value);
                             console.log(`Alterando turnos de ${proc} para ${newTurnos}`);
                             
-                            // Atualizar os dados
+                            // Atualizar os dados imediatamente
                             gameData.capacidade[p][proc].turnos = newTurnos;
                             
-                            // Salvar primeiro
+                            // Salvar dados
                             saveGameData();
                             
-                            // Aguardar um pequeno delay e então atualizar a interface
-                            setTimeout(() => {
-                                updateCapacidadeDisplay();
-                            }, 50);
+                            // Forçar recálculo da capacidade
+                            const updatedCap = computeCapacity(p);
+                            console.log(`Capacidade recalculada para ${proc}:`, updatedCap[proc]);
+                            
+                            // Atualizar interface imediatamente
+                            updateCapacidadeDisplay();
+                            
+                            // Mostrar feedback visual
+                            showToast(`Capacidade de ${proc} ajustada para ${newTurnos} turno${newTurnos !== 1 ? 's' : ''}`, 'success');
                         });
+                    } else if (!select) {
+                        console.log(`Processo ${proc} não possui equipamento disponível (select não criado)`);
                     }
                 });
             }
@@ -1303,11 +1337,11 @@
                 fixacaoAcabamento: recursos.fixacaoAcabamento.turnos
             });
             
-            // Disponível
+            // Disponível (garantir que não seja NaN)
             const disp = {
-                tecelagem: (recursos.tecelagem.teares || 0) * (recursos.tecelagem.turnos || 0) * PROCESS_RATES.tecelagem,
-                purgaTinturaria: (recursos.purgaTinturaria.jets || 0) * (recursos.purgaTinturaria.turnos || 0) * PROCESS_RATES.purgaTinturaria,
-                fixacaoAcabamento: (recursos.fixacaoAcabamento.ramas || 0) * (recursos.fixacaoAcabamento.turnos || 0) * PROCESS_RATES.fixacaoAcabamento
+                tecelagem: Math.max(0, (recursos.tecelagem.teares || 0) * (recursos.tecelagem.turnos || 0) * PROCESS_RATES.tecelagem),
+                purgaTinturaria: Math.max(0, (recursos.purgaTinturaria.jets || 0) * (recursos.purgaTinturaria.turnos || 0) * PROCESS_RATES.purgaTinturaria),
+                fixacaoAcabamento: Math.max(0, (recursos.fixacaoAcabamento.ramas || 0) * (recursos.fixacaoAcabamento.turnos || 0) * PROCESS_RATES.fixacaoAcabamento)
             };
             
             console.log(`Período ${p} - Capacidade disponível:`, disp);
@@ -1316,15 +1350,17 @@
             const necess = { tecelagem: 0, purgaTinturaria: 0, fixacaoAcabamento: 0 };
             PRODUCTS.forEach(k => {
                 const q = prod[k].planejada || 0;
-                necess.tecelagem += q * PROCESS_WEIGHTS[k].tecelagem;
-                necess.purgaTinturaria += q * PROCESS_WEIGHTS[k].purgaTinturaria;
-                necess.fixacaoAcabamento += q * PROCESS_WEIGHTS[k].fixacaoAcabamento;
+                necess.tecelagem += q * (PROCESS_WEIGHTS[k].tecelagem || 0);
+                necess.purgaTinturaria += q * (PROCESS_WEIGHTS[k].purgaTinturaria || 0);
+                necess.fixacaoAcabamento += q * (PROCESS_WEIGHTS[k].fixacaoAcabamento || 0);
             });
             
+            console.log(`Período ${p} - Capacidade necessária:`, necess);
+            
             return {
-                tecelagem: { necessaria: necess.tecelagem, disponivel: disp.tecelagem },
-                purgaTinturaria: { necessaria: necess.purgaTinturaria, disponivel: disp.purgaTinturaria },
-                fixacaoAcabamento: { necessaria: necess.fixacaoAcabamento, disponivel: disp.fixacaoAcabamento }
+                tecelagem: { necessaria: necess.tecelagem || 0, disponivel: disp.tecelagem || 0 },
+                purgaTinturaria: { necessaria: necess.purgaTinturaria || 0, disponivel: disp.purgaTinturaria || 0 },
+                fixacaoAcabamento: { necessaria: necess.fixacaoAcabamento || 0, disponivel: disp.fixacaoAcabamento || 0 }
             };
         }
 
