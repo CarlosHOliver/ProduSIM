@@ -945,9 +945,8 @@
                             const necessidade = Math.round(necessidadesBOM[m] * 10) / 10; // Arredondar para 1 casa decimal
                             const estoque = comp[m].estoqueInicial || 0;
                             const sugestao = Math.max(0, Math.ceil(necessidade - estoque));
-                            return `<span class="badge bg-light text-dark me-2 mb-1">${m.toUpperCase()}: ${necessidade} unid. necessárias (sugestão: ${sugestao})</span>`;
+                            return `<span class="badge bg-light text-dark me-2 mb-1">${m.toUpperCase()}: ${necessidade} unid. necessárias</span>`;
                         }).join('')}
-                        ${!periodoFechado ? '<br><button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="aplicarSugestaoBOM()"><i class="bi bi-magic me-1"></i>Aplicar Sugestões BOM</button>' : ''}
                     </div>
                     
                     <div class="row g-3">
