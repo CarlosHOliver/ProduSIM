@@ -51,6 +51,10 @@ python3 -m http.server 8080
 - Compras de emergência com custo premium (+50%)
 - Calculadora BOM avançada com análise de trade-offs
 - Sistema financeiro completo com análise detalhada
+- **Sistema de volatilidade composta**: Volatilidade diferenciada por produto baseada no ciclo de vida
+  - Colmeia: 15% (produto maduro, demanda estável)
+  - Piquet: 25% (mercado em crescimento, maior incerteza)
+  - Maxim: 35% (produto em declínio, alta volatilidade)
 - Logs de depuração e feedback em tempo real
 
 **Decisões Adicionais**:
@@ -76,6 +80,7 @@ As regras também estão disponíveis dentro do jogo:
 - Fluxo por período (13 a 24) com telas: Demanda, Produção, Compras, Capacidade e Financeiro.
 - **Sistema inteligente de compras**: compras de emergência automáticas quando há falta de material, com custo premium (150% do custo base).
 - **Demanda realística**: demanda influenciada pelas previsões do usuário (70%) e demanda base (30%), com volatilidade configurável.
+- **Sistema de volatilidade composta**: Cada produto tem volatilidade específica baseada em seu ciclo de vida (Colmeia: 15%, Piquet: 25%, Maxim: 35%), proporcionando experiência educacional mais realista.
 - **Acompanhamento de precisão**: cálculo do erro de previsão (MAPE) para feedback educacional.
 - **Gestão dinâmica de capacidade**: ajuste de turnos de trabalho por período e processo, com custos diferenciados para turnos extras.
 - **Calculadora BOM inteligente**: sugestões automáticas de compra baseadas na produção planejada.
@@ -112,10 +117,17 @@ As regras também estão disponíveis dentro do jogo:
 
 ## Changelog
 
-### v1.3.0 (2024-09-18) - PCP1 Avançado
-- ✅ **Nova funcionalidade**: Gestão dinâmica de capacidade com ajuste de turnos por período (0-3 turnos)
-- ✅ **Interface aprimorada**: Calculadora BOM inteligente com sugestões automáticas de compra
-- ✅ **Sistema de custos**: Turnos extras custam R$ 500 cada, separados no relatório financeiro
+### v1.3.0 (2025-09-19) - PCP1 Avançado
+- ✅ **Nova funcionalidade**: Sistema de volatilidade composta por produto
+  - Volatilidade base de mercado (20%) multiplicada por fatores específicos
+  - Colmeia: 0.75x → 15% final (produto maduro, demanda estável)
+  - Piquet: 1.25x → 25% final (mercado em crescimento, maior incerteza)  
+  - Maxim: 1.75x → 35% final (produto em declínio, alta volatilidade)
+- ✅ **Modo avançado**: Interface para ajuste manual dos multiplicadores (0.25x-3.0x)
+- ✅ **Realismo educacional**: Simulação autêntica baseada no sistema LSSP original
+- ✅ **Gestão dinâmica de capacidade**: Ajuste de turnos por período (0-3 turnos)
+- ✅ **Interface aprimorada**: Calculadora BOM inteligente com sugestões automáticas
+- ✅ **Sistema de custos**: Turnos extras custam R$ 500 cada, separados no relatório
 - ✅ **Análise estratégica**: Trade-off entre custos de turnos extras vs terceirização
 - ✅ **Feedback visual**: Barras de utilização com alertas de sobrecarga e folgas
 - ✅ **Documentação**: Manual técnico completo e relatórios PDF aprimorados
