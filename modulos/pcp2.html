@@ -76,6 +76,7 @@
                       <div class="col-md-3">
                         <label class="form-label">Volatilidade Demanda (%)</label>
                         <input type="number" class="form-control" id="cen-vol" value="15">
+                        <small class="text-muted">Volatilidade única para módulo básico</small>
                       </div>
                       <div class="col-md-3">
                         <label class="form-label">LT Produto A (períodos)</label>
@@ -160,7 +161,7 @@
         <div class="mb-0">Desenvolvido por Carlos Henrique (LABINFO/FAEN/UFGD) - 2025</div>
       </div>
       <div class="text-end">
-        <div class="mb-0">Versão 1.2.0 - Módulo PCP2</div>
+        <div class="mb-0">Versão 1.2.1 - Módulo PCP2</div>
         <button type="button" class="btn btn-outline-light btn-sm" data-bs-toggle="modal" data-bs-target="#modalRegras"><i class="bi bi-info-circle"></i> Regras do Jogo</button>
       </div>
     </div>
@@ -785,7 +786,7 @@
       const pnl = document.getElementById('painel-cenario'); if (pnl){ try{ new bootstrap.Collapse(pnl, {toggle:false}).hide(); }catch{} }
       // Restaura valores padrão do cenário (opcional)
       const setVal=(id,val)=>{ const el=document.getElementById(id); if(el) el.value=val; };
-      setVal('cen-vol','10'); setVal('lt-A','1'); setVal('lt-B','1'); setVal('lt-C','1');
+      setVal('cen-vol','15'); setVal('lt-A','1'); setVal('lt-B','1'); setVal('lt-C','1');
       setVal('lote-politica','L4L'); setVal('lote-foq','200'); setVal('custos','2;50;10;8');
       setVal('cap-horas','80'); setVal('tempo-lote','4'); setVal('estoques-iniciais','200;400;800');
       setVal('custos-fixos','1000'); setVal('custo-armazenagem','0.25'); setVal('turnos-basicos','1');
