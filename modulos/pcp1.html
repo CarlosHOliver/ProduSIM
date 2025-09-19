@@ -210,6 +210,54 @@
                                             <input type="number" class="form-control" id="preco-maxim" value="35">
                                         </div>
                                     </div>
+                                    <hr>
+                                    <h6 class="mb-3"><i class="bi bi-graph-up me-2"></i>Padrões de Demanda por Produto</h6>
+                                    <div class="row g-3">
+                                        <div class="col-md-4">
+                                            <label class="form-label">Padrão Colmeia</label>
+                                            <select class="form-select" id="pattern-colmeia">
+                                                <option value="linear">Linear/Estável (padrão)</option>
+                                                <option value="growing">Crescente</option>
+                                                <option value="declining">Decrescente</option>
+                                            </select>
+                                            <small class="text-muted">Produto tradicionalmente estável</small>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">Padrão Piquet</label>
+                                            <select class="form-select" id="pattern-piquet">
+                                                <option value="linear">Linear/Estável</option>
+                                                <option value="growing" selected>Crescente (padrão)</option>
+                                                <option value="declining">Decrescente</option>
+                                            </select>
+                                            <small class="text-muted">Produto em crescimento no mercado</small>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">Padrão Maxim</label>
+                                            <select class="form-select" id="pattern-maxim">
+                                                <option value="linear">Linear/Estável</option>
+                                                <option value="growing">Crescente</option>
+                                                <option value="declining" selected>Decrescente (padrão)</option>
+                                            </select>
+                                            <small class="text-muted">Produto maduro com declínio</small>
+                                        </div>
+                                    </div>
+                                    <div class="row g-3 mt-2">
+                                        <div class="col-md-4">
+                                            <label class="form-label">Multiplicador Colmeia</label>
+                                            <input type="number" class="form-control" id="vol-colmeia" value="0.75" min="0.25" max="3.0" step="0.05">
+                                            <small class="text-muted">Base 20% × 0.75 = 15%</small>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">Multiplicador Piquet</label>
+                                            <input type="number" class="form-control" id="vol-piquet" value="1.25" min="0.25" max="3.0" step="0.05">
+                                            <small class="text-muted">Base 20% × 1.25 = 25%</small>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">Multiplicador Maxim</label>
+                                            <input type="number" class="form-control" id="vol-maxim" value="1.75" min="0.25" max="3.0" step="0.05">
+                                            <small class="text-muted">Base 20% × 1.75 = 35%</small>
+                                        </div>
+                                    </div>
                                     <small class="text-muted">Os demais parâmetros usam valores padrão e podem ser ajustados no código conforme necessário.</small>
                                 </div>
                             </div>
@@ -297,6 +345,48 @@
                             <li>Estoques altos geram custos extras; estoques baixos podem causar perdas de venda.</li>
                             <li>Use os relatórios e gráficos para ajustar sua estratégia a cada período.</li>
                         </ul>
+                        <h6>📊 Padrões de Demanda (Baseado no LSSP Original)</h6>
+                        <div class="row g-2">
+                            <div class="col-md-4">
+                                <div class="card border-primary h-100">
+                                    <div class="card-body p-2">
+                                        <h6 class="card-title text-primary">COLMEIA</h6>
+                                        <p class="card-text small mb-1">
+                                            <strong>Padrão:</strong> Linear/Estável<br>
+                                            <strong>Volatilidade:</strong> Baixa (15%)<br>
+                                            <strong>Característica:</strong> Produto tradicional com demanda previsível
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card border-success h-100">
+                                    <div class="card-body p-2">
+                                        <h6 class="card-title text-success">PIQUET</h6>
+                                        <p class="card-text small mb-1">
+                                            <strong>Padrão:</strong> Crescente<br>
+                                            <strong>Volatilidade:</strong> Média (25%)<br>
+                                            <strong>Característica:</strong> Produto em crescimento no mercado
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card border-warning h-100">
+                                    <div class="card-body p-2">
+                                        <h6 class="card-title text-warning">MAXIM</h6>
+                                        <p class="card-text small mb-1">
+                                            <strong>Padrão:</strong> Decrescente<br>
+                                            <strong>Volatilidade:</strong> Alta (35%)<br>
+                                            <strong>Característica:</strong> Produto maduro com declínio sazonal
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="alert alert-info mt-3">
+                            <small><i class="bi bi-info-circle me-1"></i><strong>Estratégia:</strong> Cada produto requer abordagem diferente de previsão e planejamento. Colmeia é mais previsível, Piquet oferece oportunidades de crescimento, e Maxim requer gestão cuidadosa do declínio.</small>
+                        </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
@@ -340,6 +430,28 @@
         };
         const DEFAULT_PRICES = { colmeia: 20, piquet: 28, maxim: 35 };
     const DEFAULT_COSTS = { custoEstoque: 0.5, penalidadePerda: 5, custosFixos: 2000, custoTerceirizacao: 3 };
+    
+    // Padrões de demanda específicos por produto (baseado no LSSP original)
+    const DEMAND_PATTERNS = {
+        colmeia: {
+            trend: 'linear',      // Demanda estável, linear
+            volatility: 0.15,     // Baixa volatilidade (15%)
+            seasonality: 0.05,    // Pouca sazonalidade (5%)
+            description: 'Produto estável com demanda linear'
+        },
+        piquet: {
+            trend: 'growing',     // Demanda crescente
+            volatility: 0.25,     // Média volatilidade (25%)
+            seasonality: 0.10,    // Sazonalidade moderada (10%)
+            description: 'Produto em crescimento no mercado'
+        },
+        maxim: {
+            trend: 'declining',   // Demanda decrescente
+            volatility: 0.35,     // Alta volatilidade (35%)
+            seasonality: 0.15,    // Alta sazonalidade (15%)
+            description: 'Produto maduro com declínio sazonal'
+        }
+    };
 
     // Estado de visualização (seletores de período)
     let financeViewPeriod = null; // período selecionado na aba Financeiro
@@ -444,6 +556,7 @@
             try {
                 // Configurar dados iniciais do jogo
                 const cenario = collectScenarioConfig(tipoDemanda);
+                
                 gameData.config = {
                     empresa,
                     integrantes,
@@ -775,19 +888,49 @@
                 piquet: parseFloat(document.getElementById('preco-piquet')?.value || DEFAULT_PRICES.piquet),
                 maxim: parseFloat(document.getElementById('preco-maxim')?.value || DEFAULT_PRICES.maxim)
             };
-            // Gera baseline de demanda simples por período conforme tipoDemanda
-            const base = {};
-            for (let p = 13; p <= 24; p++) {
-        if (tipoDemandaSel === 'alta') {
-                    base[p] = { colmeia: 1200, piquet: 900, maxim: 700 };
-        } else if (tipoDemandaSel === 'media') {
-                    base[p] = { colmeia: 600, piquet: 450, maxim: 350 };
-                } else {
-                    base[p] = { colmeia: 200, piquet: 150, maxim: 100 };
-                }
+            
+            // Verificar se está no modo avançado
+            const modoAvancado = document.getElementById('modo-professor')?.checked || false;
+            
+            // Configurar padrões de demanda
+            let patterns = {};
+            let volatilities = {};
+            
+            if (modoAvancado) {
+                // Modo avançado: usar configurações específicas
+                patterns = {
+                    colmeia: document.getElementById('pattern-colmeia')?.value || 'linear',
+                    piquet: document.getElementById('pattern-piquet')?.value || 'growing', 
+                    maxim: document.getElementById('pattern-maxim')?.value || 'declining'
+                };
+                // No modo avançado, os valores são multiplicadores diretos da volatilidade base
+                volatilities = {
+                    colmeia: parseFloat(document.getElementById('vol-colmeia')?.value || 0.75),
+                    piquet: parseFloat(document.getElementById('vol-piquet')?.value || 1.25),
+                    maxim: parseFloat(document.getElementById('vol-maxim')?.value || 1.75)
+                };
+            } else {
+                // Modo padrão: usar padrões do LSSP original
+                patterns = {
+                    colmeia: DEMAND_PATTERNS.colmeia.trend,
+                    piquet: DEMAND_PATTERNS.piquet.trend,
+                    maxim: DEMAND_PATTERNS.maxim.trend
+                };
+                // No modo padrão, calcular como multiplicadores da volatilidade base (20%)
+                volatilities = {
+                    colmeia: DEMAND_PATTERNS.colmeia.volatility / 0.20, // 15%/20% = 0.75
+                    piquet: DEMAND_PATTERNS.piquet.volatility / 0.20,   // 25%/20% = 1.25
+                    maxim: DEMAND_PATTERNS.maxim.volatility / 0.20      // 35%/20% = 1.75
+                };
             }
+            
+            // Gerar demanda base com padrões específicos por produto
+            const base = generateDemandBase(tipoDemandaSel, patterns);
+            
             return {
-                volatilidade: vol / 100,
+                volatilidade: vol / 100, // Volatilidade base (20%)
+                volatilidades: volatilities, // Multiplicadores por produto
+                patterns: patterns, // Padrões de tendência por produto
                 custoEstoque,
                 penalidadePerda: penal,
                 custosFixos: fixos,
@@ -795,6 +938,58 @@
                 custoTerceirizacao: DEFAULT_COSTS.custoTerceirizacao,
                 demandaBase: base
             };
+        }
+        
+        // Nova função para gerar demanda base com padrões específicos
+        function generateDemandBase(tipoDemanda, patterns) {
+            const base = {};
+            
+            // Demandas base iniciais por tipo
+            const baseLevels = {
+                alta: { colmeia: 1200, piquet: 900, maxim: 700 },
+                media: { colmeia: 600, piquet: 450, maxim: 350 },
+                baixa: { colmeia: 200, piquet: 150, maxim: 100 }
+            };
+            
+            const baseLevel = baseLevels[tipoDemanda] || baseLevels.media;
+            
+            for (let p = 13; p <= 24; p++) {
+                base[p] = {};
+                const progress = (p - 13) / 11; // 0 a 1 ao longo dos 12 períodos
+                
+                PRODUCTS.forEach(product => {
+                    const baseValue = baseLevel[product];
+                    const pattern = patterns[product];
+                    const seasonality = DEMAND_PATTERNS[product].seasonality;
+                    
+                    let adjustedValue = baseValue;
+                    
+                    // Aplicar tendência baseada no padrão
+                    switch (pattern) {
+                        case 'growing':
+                            // Crescimento de 0% a 40% ao longo dos períodos
+                            adjustedValue *= (1 + progress * 0.4);
+                            break;
+                        case 'declining':
+                            // Declínio de 0% a -30% ao longo dos períodos
+                            adjustedValue *= (1 - progress * 0.3);
+                            break;
+                        case 'linear':
+                        default:
+                            // Mantém estável com pequena variação
+                            adjustedValue *= (1 + (Math.sin(progress * Math.PI * 2) * 0.05));
+                            break;
+                    }
+                    
+                    // Aplicar componente sazonal
+                    const seasonalFactor = Math.sin(progress * Math.PI * 4) * seasonality;
+                    adjustedValue *= (1 + seasonalFactor);
+                    
+                    base[p][product] = Math.max(50, Math.round(adjustedValue));
+                });
+            }
+            
+            return base;
         }
 
         function getPeriodoAtual() { return gameData.config?.periodoAtual || 13; }
@@ -1459,7 +1654,11 @@
                     const demandaEsperada = previsao > 0 ? 
                         (previsao * 0.7 + base * 0.3) : base;
                     
-                    const noise = (Math.random()*2 - 1) * cen.volatilidade; // -vol..+vol
+                    // Volatilidade composta: base (20%) × multiplicador específico do produto
+                    const volatilidade = cen.volatilidade || 0.2; // Volatilidade base (20%)
+                    const multiplicador = cen.volatilidades?.[k] || 1.0; // Multiplicador do produto
+                    const volatilityFinal = volatilidade * multiplicador; // Volatilidade composta
+                    const noise = (Math.random()*2 - 1) * volatilityFinal; // -vol..+vol composta
                     const real = Math.max(0, Math.round(demandaEsperada * (1 + noise)));
                     gameData.demanda[p][k].real = real;
                     
